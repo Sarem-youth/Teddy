@@ -30,7 +30,6 @@ class Setting extends Model
         'facebook_url',
         'telegram_url',
         'whatsapp_number',
-        'announcement_text',
         'about_text',
     ];
 

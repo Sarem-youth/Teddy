@@ -70,22 +70,6 @@ export default function Navbar() {
 
   return (
     <>
-      {settings.announcement_text && (
-        <Box
-          sx={{
-            background: 'linear-gradient(90deg, #052440, #0A5C9E)',
-            color: '#CDE9FF',
-            textAlign: 'center',
-            fontSize: 13,
-            fontWeight: 600,
-            py: 0.8,
-            px: 2,
-          }}
-        >
-          {settings.announcement_text}
-        </Box>
-      )}
-
       <AppBar
         position="sticky"
         elevation={0}

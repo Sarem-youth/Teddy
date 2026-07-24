@@ -19,7 +19,6 @@ const SECTIONS = [
     fields: [
       { key: 'store_name', label: 'Store Name' },
       { key: 'store_tagline', label: 'Tagline', multiline: true },
-      { key: 'announcement_text', label: 'Announcement Bar Text', helper: 'Shown at the very top of the storefront. Leave empty to hide.' },
       { key: 'about_text', label: 'About Us Text', multiline: true, rows: 4 },
     ],
   },

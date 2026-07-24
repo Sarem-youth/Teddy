@@ -52,7 +52,6 @@ class DatabaseSeeder extends Seeder
             'facebook_url' => 'https://facebook.com/teddytrading',
             'telegram_url' => 'https://t.me/teddytrading',
             'whatsapp_number' => '+251911234567',
-            'announcement_text' => 'Free delivery within Addis Ababa on orders above ETB 20,000!',
             'about_text' => 'Teddy General Trading has been supplying Ethiopia with premium water pumps, valves, pipes, sanitary ware and specialized fittings for over a decade. From household plumbing to large-scale municipal and irrigation projects, we deliver certified equipment backed by expert technical support.',
         ];
 
