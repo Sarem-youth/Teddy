@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 set_time_limit(300);
 
-if (($_GET['key'] ?? '') !== 'CHANGE-ME') {
+if (($_GET['key'] ?? '') !== 'Tgt2026-x9K4mQvR7pLwZs3N') {
     http_response_code(403);
     exit('Forbidden');
 }
