@@ -134,5 +134,58 @@ V=$(echo "$R" | json "['settings']['shipping_fee']")
 CODE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE $B/api/admin/products/$PID -H "$AAUTH" -H 'Accept: application/json')
 [ "$CODE" = "200" ] && ok "admin delete product" || bad "admin delete product" "$CODE"
 
+# ══════ Media gallery & power tools ══════
+
+# 21. Public gallery feed
+R=$(curl -s "$B/api/gallery" -H 'Accept: application/json')
+CNT=$(echo "$R" | python3 -c "import sys,json;print(len(json.load(sys.stdin)['items']))" 2>/dev/null)
+[ "${CNT:-0}" -ge 1 ] && ok "public gallery feed ($CNT items)" || bad "public gallery" "$R"
+
+# 22. Admin gallery upload (image)
+printf '\x89PNG\r\n\x1a\n' > /tmp/t.png; python3 -c "
+from struct import pack
+import zlib
+def chunk(t,d):
+    c=pack('>I',len(d))+t+d
+    return c+pack('>I',zlib.crc32(t+d)&0xffffffff)
+ihdr=chunk(b'IHDR',pack('>IIBBBBB',1,1,8,2,0,0,0))
+idat=chunk(b'IDAT',zlib.compress(b'\x00\xff\x00\x00'))
+open('/tmp/t.png','wb').write(b'\x89PNG\r\n\x1a\n'+ihdr+idat+chunk(b'IEND',b''))"
+R=$(curl -s -X POST $B/api/admin/gallery -H "$AAUTH" -H 'Accept: application/json' -F 'images[]=@/tmp/t.png' -F 'title=Test upload')
+GID=$(echo "$R" | json "['items'][0]['id']")
+[ -n "$GID" ] && ok "admin gallery image upload (id $GID)" || bad "gallery upload" "$R"
+
+# 23. Admin gallery toggle + delete
+R=$(curl -s -X PUT $B/api/admin/gallery/$GID -H "$AAUTH" -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"is_active":false,"title":"Hidden test"}')
+V=$(echo "$R" | json "['item']['is_active']")
+[ "$V" = "False" ] && ok "admin gallery toggle visibility" || bad "gallery toggle" "$R"
+CODE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE $B/api/admin/gallery/$GID -H "$AAUTH" -H 'Accept: application/json')
+[ "$CODE" = "200" ] && ok "admin gallery delete" || bad "gallery delete" "$CODE"
+
+# 24. Product quick-edit
+R=$(curl -s -X PATCH $B/api/admin/products/1/quick -H "$AAUTH" -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"price":9999,"stock_quantity":42}')
+V=$(echo "$R" | json "['product']['stock_quantity']")
+[ "$V" = "42" ] && ok "product quick-edit (price+stock)" || bad "quick-edit" "$R"
+
+# 25. Product duplicate + bulk delete of the copy
+R=$(curl -s -X POST $B/api/admin/products/1/duplicate -H "$AAUTH" -H 'Accept: application/json')
+DID=$(echo "$R" | json "['product']['id']")
+ACT=$(echo "$R" | json "['product']['is_active']")
+[ -n "$DID" ] && [ "$ACT" = "False" ] && ok "product duplicate (hidden draft id $DID)" || bad "duplicate" "$R"
+R=$(curl -s -X POST $B/api/admin/products/bulk -H "$AAUTH" -H 'Content-Type: application/json' -H 'Accept: application/json' -d "{\"ids\":[$DID],\"action\":\"delete\"}")
+V=$(echo "$R" | json "['count']")
+[ "$V" = "1" ] && ok "bulk delete" || bad "bulk delete" "$R"
+
+# 26. CSV exports
+for kind in orders products customers; do
+  CT=$(curl -s -o /tmp/e.csv -w '%{content_type}' $B/api/admin/export/$kind -H "$AAUTH")
+  LINES=$(wc -l < /tmp/e.csv)
+  case "$CT" in text/csv*) [ "$LINES" -ge 1 ] && ok "CSV export: $kind ($LINES lines)" || bad "csv $kind" "empty";; *) bad "csv $kind" "$CT";; esac
+done
+
+# 27. RBAC: customer blocked from gallery admin
+CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST $B/api/admin/gallery -H "$AUTH" -H 'Accept: application/json')
+[ "$CODE" = "403" ] && ok "RBAC: customer blocked from media admin" || bad "RBAC media" "$CODE"
+
 echo; echo "══════════ RESULT: $PASS passed, $FAIL failed ══════════"
 exit $FAIL

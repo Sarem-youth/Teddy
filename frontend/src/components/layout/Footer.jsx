@@ -89,10 +89,10 @@ export default function Footer() {
             </Typography>
             {[
               { label: 'All Products', to: '/shop' },
-              { label: 'Water Pumps', to: '/shop?category=water-pumps' },
-              { label: 'Filtration', to: '/shop?category=filtration-systems' },
+              { label: 'Valves & Controls', to: '/shop?category=valves-controls' },
+              { label: 'Bathroom & Sanitary', to: '/shop?category=bathroom-sanitary' },
               { label: 'Pipes & Fittings', to: '/shop?category=pipes-fittings' },
-              { label: 'Tanks & Storage', to: '/shop?category=tanks-storage' },
+              { label: 'Water Meters', to: '/shop?category=water-meters' },
             ].map((l) => (
               <Link
                 key={l.label}
@@ -111,6 +111,7 @@ export default function Footer() {
             </Typography>
             {[
               { label: 'About Us', to: '/about' },
+              { label: 'Project Gallery', to: '/gallery' },
               { label: 'Contact', to: '/contact' },
               { label: 'My Account', to: '/account' },
               { label: 'My Orders', to: '/account/orders' },

@@ -24,6 +24,12 @@ import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import PropaneTankRoundedIcon from '@mui/icons-material/PropaneTankRounded';
 import GrassRoundedIcon from '@mui/icons-material/GrassRounded';
 import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded';
+import PlayCircleFilledRoundedIcon from '@mui/icons-material/PlayCircleFilledRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import ShowerRoundedIcon from '@mui/icons-material/ShowerRounded';
+import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded';
+import DonutLargeRoundedIcon from '@mui/icons-material/DonutLargeRounded';
+import SolarPowerRoundedIcon from '@mui/icons-material/SolarPowerRounded';
 
 import api from '../api/client';
 import Seo from '../components/Seo';
@@ -39,6 +45,10 @@ const CATEGORY_ICONS = {
   tank: <PropaneTankRoundedIcon />,
   irrigation: <GrassRoundedIcon />,
   meter: <SpeedRoundedIcon />,
+  bathroom: <ShowerRoundedIcon />,
+  fire: <LocalFireDepartmentRoundedIcon />,
+  flange: <DonutLargeRoundedIcon />,
+  solar: <SolarPowerRoundedIcon />,
 };
 
 const BENEFITS = [
@@ -68,6 +78,7 @@ export default function Home() {
   const { settings } = useSettings();
   const [featured, setFeatured] = useState(null);
   const [categories, setCategories] = useState(null);
+  const [media, setMedia] = useState({ video: null, photos: [] });
 
   useEffect(() => {
     api
@@ -79,6 +90,17 @@ export default function Home() {
       .get('/categories')
       .then(({ data }) => setCategories(data.categories || []))
       .catch(() => setCategories([]));
+
+    api
+      .get('/gallery')
+      .then(({ data }) => {
+        const items = data.items || [];
+        setMedia({
+          video: items.find((i) => i.type === 'video') || null,
+          photos: items.filter((i) => i.type === 'image').slice(0, 8),
+        });
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -396,6 +418,117 @@ export default function Home() {
           </Box>
         </Container>
       </Box>
+
+      {/* ============ SHOWROOM / MEDIA ============ */}
+      {(media.video || media.photos.length > 0) && (
+        <Box sx={{ background: 'linear-gradient(180deg,#F4F9FD 0%,#EAF3FA 100%)', py: { xs: 6, md: 9 } }}>
+          <Container maxWidth="xl">
+            <SectionHeading
+              overline="Straight from our showroom"
+              title="Real products. Real projects."
+              subtitle="A look inside our warehouse and the installations we supply across Ethiopia."
+            />
+            <Grid container spacing={3} alignItems="stretch">
+              {media.video && (
+                <Grid item xs={12} md={7}>
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      borderRadius: 5,
+                      overflow: 'hidden',
+                      boxShadow: '0 24px 54px -18px rgba(5,36,64,.35)',
+                      height: '100%',
+                      minHeight: { xs: 260, md: 420 },
+                      bgcolor: '#06304f',
+                    }}
+                  >
+                    <Box
+                      component="video"
+                      src={media.video.path}
+                      poster={media.video.thumb_path || undefined}
+                      controls
+                      preload="none"
+                      playsInline
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                    <Chip
+                      icon={<PlayCircleFilledRoundedIcon sx={{ '&&': { color: '#fff' } }} />}
+                      label="See us in action"
+                      sx={{
+                        position: 'absolute',
+                        top: 14,
+                        left: 14,
+                        color: '#fff',
+                        fontWeight: 700,
+                        bgcolor: 'rgba(4,29,51,.65)',
+                        backdropFilter: 'blur(6px)',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              )}
+              <Grid item xs={12} md={media.video ? 5 : 12}>
+                <Grid container spacing={1.5}>
+                  {media.photos.slice(0, media.video ? 6 : 8).map((photo, i) => (
+                    <Grid item xs={4} key={photo.id}>
+                      <Box
+                        component={RouterLink}
+                        to="/gallery"
+                        sx={{
+                          display: 'block',
+                          borderRadius: 3,
+                          overflow: 'hidden',
+                          position: 'relative',
+                          aspectRatio: '1 / 1',
+                          boxShadow: '0 4px 14px rgba(5,36,64,.12)',
+                          '&:hover img': { transform: 'scale(1.06)' },
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={photo.thumb_path || photo.path}
+                          alt={photo.title || 'Teddy showroom photo'}
+                          loading="lazy"
+                          sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .35s ease' }}
+                        />
+                        {i === (media.video ? 5 : 7) && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              inset: 0,
+                              display: 'grid',
+                              placeItems: 'center',
+                              bgcolor: 'rgba(4,29,51,.55)',
+                              color: '#fff',
+                              fontWeight: 700,
+                              fontSize: 15,
+                              textAlign: 'center',
+                              px: 1,
+                            }}
+                          >
+                            View full gallery →
+                          </Box>
+                        )}
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Button
+                  component={RouterLink}
+                  to="/gallery"
+                  variant="outlined"
+                  size="large"
+                  endIcon={<ArrowForwardRoundedIcon />}
+                  sx={{ mt: 2.5, fontWeight: 700 }}
+                >
+                  Browse the Project Gallery
+                </Button>
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
+      )}
 
       {/* ============ WHY US ============ */}
       <Container maxWidth="xl" sx={{ py: { xs: 6, md: 9 } }}>

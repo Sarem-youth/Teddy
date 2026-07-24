@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\ExportController as AdminExportController;
+use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Api\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SettingController;
@@ -25,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/gallery', [GalleryController::class, 'index']);
 Route::get('/settings', [SettingController::class, 'publicSettings']);
 Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:8,1');
 
@@ -83,8 +87,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 
     Route::get('/products', [AdminProductController::class, 'index']);
     Route::post('/products', [AdminProductController::class, 'store']);
+    Route::post('/products/bulk', [AdminProductController::class, 'bulk']);
     Route::get('/products/{product}', [AdminProductController::class, 'show']);
     Route::post('/products/{product}', [AdminProductController::class, 'update']); // POST for multipart updates
+    Route::patch('/products/{product}/quick', [AdminProductController::class, 'quickUpdate']);
+    Route::post('/products/{product}/duplicate', [AdminProductController::class, 'duplicate']);
     Route::delete('/products/{product}', [AdminProductController::class, 'destroy']);
     Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage']);
     Route::put('/products/{product}/images/{image}/primary', [AdminProductController::class, 'makePrimaryImage']);
@@ -107,4 +114,15 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 
     Route::get('/settings', [AdminSettingController::class, 'index']);
     Route::put('/settings', [AdminSettingController::class, 'update']);
+
+    // Media gallery manager
+    Route::get('/gallery', [AdminGalleryController::class, 'index']);
+    Route::post('/gallery', [AdminGalleryController::class, 'store']);
+    Route::put('/gallery/{item}', [AdminGalleryController::class, 'update']);
+    Route::delete('/gallery/{item}', [AdminGalleryController::class, 'destroy']);
+
+    // CSV exports
+    Route::get('/export/orders', [AdminExportController::class, 'orders']);
+    Route::get('/export/products', [AdminExportController::class, 'products']);
+    Route::get('/export/customers', [AdminExportController::class, 'customers']);
 });

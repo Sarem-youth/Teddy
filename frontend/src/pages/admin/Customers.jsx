@@ -13,11 +13,14 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import Skeleton from '@mui/material/Skeleton';
 import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 
 import api from '../../api/client';
 import Seo from '../../components/Seo';
 import { formatETB, formatDate } from '../../utils/format';
+import downloadCsv from '../../utils/downloadCsv';
 
 export default function Customers() {
   const [result, setResult] = useState(null);
@@ -38,14 +41,23 @@ export default function Customers() {
   return (
     <Box>
       <Seo title="Customers" />
-      <Typography variant="h4" sx={{ mb: 3, fontSize: { xs: 24, md: 30 } }}>
-        Customers
-        {result && (
-          <Typography component="span" color="text.secondary" sx={{ ml: 1.5, fontSize: 16 }}>
-            ({result.total})
-          </Typography>
-        )}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Typography variant="h4" sx={{ fontSize: { xs: 24, md: 30 } }}>
+          Customers
+          {result && (
+            <Typography component="span" color="text.secondary" sx={{ ml: 1.5, fontSize: 16 }}>
+              ({result.total})
+            </Typography>
+          )}
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<FileDownloadRoundedIcon />}
+          onClick={() => downloadCsv('/admin/export/customers', `customers-${new Date().toISOString().slice(0, 10)}.csv`)}
+        >
+          Export CSV
+        </Button>
+      </Box>
 
       <Card sx={{ p: 2, mb: 3 }}>
         <Box

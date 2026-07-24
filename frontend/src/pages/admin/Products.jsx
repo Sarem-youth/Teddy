@@ -20,6 +20,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Skeleton from '@mui/material/Skeleton';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
+import Checkbox from '@mui/material/Checkbox';
+import Popover from '@mui/material/Popover';
+import Stack from '@mui/material/Stack';
 
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -27,11 +30,15 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import WaterDropRoundedIcon from '@mui/icons-material/WaterDropRounded';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
+import BoltRoundedIcon from '@mui/icons-material/BoltRounded';
 
 import api, { apiError } from '../../api/client';
 import Seo from '../../components/Seo';
 import { formatETB } from '../../utils/format';
 import { useSnackbar } from '../../context/SnackbarContext';
+import downloadCsv from '../../utils/downloadCsv';
 
 export default function Products() {
   const { notify } = useSnackbar();
@@ -40,6 +47,9 @@ export default function Products() {
   const [filters, setFilters] = useState({ search: '', category_id: '', status: '' });
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState([]);
+  const [quickEdit, setQuickEdit] = useState(null); // { anchor, product, price, stock }
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(() => {
     setResult(null);
@@ -73,6 +83,57 @@ export default function Products() {
     }
   };
 
+  const duplicate = async (product) => {
+    try {
+      await api.post(`/admin/products/${product.id}/duplicate`);
+      notify(`"${product.title}" duplicated as a hidden draft`);
+      load();
+    } catch (err) {
+      notify(apiError(err), 'error');
+    }
+  };
+
+  const bulkAction = async (action) => {
+    if (action === 'delete' && !window.confirm(`Delete ${selected.length} product(s) permanently?`)) return;
+    try {
+      const { data } = await api.post('/admin/products/bulk', { ids: selected, action });
+      notify(`${data.count} product(s) updated`);
+      setSelected([]);
+      load();
+    } catch (err) {
+      notify(apiError(err), 'error');
+    }
+  };
+
+  const saveQuickEdit = async () => {
+    try {
+      await api.patch(`/admin/products/${quickEdit.product.id}/quick`, {
+        price: Number(quickEdit.price),
+        stock_quantity: Number(quickEdit.stock),
+      });
+      notify('Saved');
+      setQuickEdit(null);
+      load();
+    } catch (err) {
+      notify(apiError(err), 'error');
+    }
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      await downloadCsv('/admin/export/products', `products-${new Date().toISOString().slice(0, 10)}.csv`);
+      notify('CSV downloaded');
+    } catch (err) {
+      notify(apiError(err), 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const pageIds = (result?.data || []).map((p) => p.id);
+  const allChecked = pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
+
   return (
     <Box>
       <Seo title="Manage Products" />
@@ -85,9 +146,14 @@ export default function Products() {
             </Typography>
           )}
         </Typography>
-        <Button component={RouterLink} to="/admin/products/new" variant="contained" startIcon={<AddRoundedIcon />}>
-          Add Product
-        </Button>
+        <Stack direction="row" spacing={1.2}>
+          <Button variant="outlined" startIcon={<FileDownloadRoundedIcon />} onClick={exportCsv} disabled={exporting}>
+            {exporting ? 'Exporting…' : 'Export CSV'}
+          </Button>
+          <Button component={RouterLink} to="/admin/products/new" variant="contained" startIcon={<AddRoundedIcon />}>
+            Add Product
+          </Button>
+        </Stack>
       </Box>
 
       <Card sx={{ p: 2, mb: 3 }}>
@@ -162,11 +228,56 @@ export default function Products() {
         <Skeleton variant="rounded" height={420} sx={{ borderRadius: 4 }} />
       ) : (
         <>
+          {selected.length > 0 && (
+            <Card
+              sx={{
+                p: 1.4,
+                mb: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                flexWrap: 'wrap',
+                bgcolor: '#052440',
+                color: '#fff',
+              }}
+            >
+              <Typography sx={{ fontWeight: 700, fontSize: 14, mr: 1 }}>{selected.length} selected</Typography>
+              <Button size="small" variant="contained" color="success" onClick={() => bulkAction('activate')}>
+                Activate
+              </Button>
+              <Button size="small" variant="contained" color="warning" onClick={() => bulkAction('deactivate')}>
+                Hide
+              </Button>
+              <Button size="small" variant="outlined" sx={{ color: '#fff', borderColor: 'rgba(255,255,255,.4)' }} onClick={() => bulkAction('feature')}>
+                Feature
+              </Button>
+              <Button size="small" variant="outlined" sx={{ color: '#fff', borderColor: 'rgba(255,255,255,.4)' }} onClick={() => bulkAction('unfeature')}>
+                Unfeature
+              </Button>
+              <Button size="small" variant="contained" color="error" onClick={() => bulkAction('delete')}>
+                Delete
+              </Button>
+              <Button size="small" sx={{ color: 'rgba(255,255,255,.7)', ml: 'auto' }} onClick={() => setSelected([])}>
+                Clear
+              </Button>
+            </Card>
+          )}
           <Card>
             <TableContainer>
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={allChecked}
+                        indeterminate={!allChecked && pageIds.some((id) => selected.includes(id))}
+                        onChange={(e) =>
+                          setSelected(e.target.checked
+                            ? [...new Set([...selected, ...pageIds])]
+                            : selected.filter((id) => !pageIds.includes(id)))
+                        }
+                      />
+                    </TableCell>
                     <TableCell>Product</TableCell>
                     <TableCell>Category</TableCell>
                     <TableCell>Price</TableCell>
@@ -177,7 +288,17 @@ export default function Products() {
                 </TableHead>
                 <TableBody>
                   {result.data.map((product) => (
-                    <TableRow key={product.id} hover>
+                    <TableRow key={product.id} hover selected={selected.includes(product.id)}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selected.includes(product.id)}
+                          onChange={(e) =>
+                            setSelected(e.target.checked
+                              ? [...selected, product.id]
+                              : selected.filter((id) => id !== product.id))
+                          }
+                        />
+                      </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6 }}>
                           <Avatar
@@ -198,8 +319,31 @@ export default function Products() {
                         </Box>
                       </TableCell>
                       <TableCell>{product.category?.name || 'Uncategorized'}</TableCell>
-                      <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                        {formatETB(product.price, { decimals: 0 })}
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        <Tooltip title="Quick edit price & stock">
+                          <Box
+                            onClick={(e) =>
+                              setQuickEdit({
+                                anchor: e.currentTarget,
+                                product,
+                                price: product.price,
+                                stock: product.stock_quantity,
+                              })
+                            }
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              borderBottom: '1px dashed rgba(10,92,158,.5)',
+                              '&:hover': { color: 'primary.main' },
+                            }}
+                          >
+                            {formatETB(product.price, { decimals: 0 })}
+                            <BoltRoundedIcon sx={{ fontSize: 15, color: 'secondary.main' }} />
+                          </Box>
+                        </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -225,6 +369,11 @@ export default function Products() {
                             <VisibilityRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
+                        <Tooltip title="Duplicate">
+                          <IconButton size="small" onClick={() => duplicate(product)}>
+                            <ContentCopyRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Edit">
                           <IconButton size="small" component={RouterLink} to={`/admin/products/${product.id}/edit`}>
                             <EditRoundedIcon fontSize="small" />
@@ -240,7 +389,7 @@ export default function Products() {
                   ))}
                   {result.data.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 5, color: 'text.secondary' }}>
+                      <TableCell colSpan={7} align="center" sx={{ py: 5, color: 'text.secondary' }}>
                         No products match your filters.
                       </TableCell>
                     </TableRow>
@@ -256,6 +405,43 @@ export default function Products() {
           )}
         </>
       )}
+
+      {/* Quick edit popover */}
+      <Popover
+        open={!!quickEdit}
+        anchorEl={quickEdit?.anchor}
+        onClose={() => setQuickEdit(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        {quickEdit && (
+          <Box sx={{ p: 2, width: 240 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 13.5, mb: 1.5 }} noWrap>
+              {quickEdit.product.title}
+            </Typography>
+            <Stack spacing={1.5}>
+              <TextField
+                label="Price (ETB)"
+                type="number"
+                size="small"
+                value={quickEdit.price}
+                onChange={(e) => setQuickEdit((q) => ({ ...q, price: e.target.value }))}
+                inputProps={{ min: 0 }}
+              />
+              <TextField
+                label="Stock quantity"
+                type="number"
+                size="small"
+                value={quickEdit.stock}
+                onChange={(e) => setQuickEdit((q) => ({ ...q, stock: e.target.value }))}
+                inputProps={{ min: 0 }}
+              />
+              <Button variant="contained" size="small" onClick={saveQuickEdit}>
+                Save
+              </Button>
+            </Stack>
+          </Box>
+        )}
+      </Popover>
     </Box>
   );
 }

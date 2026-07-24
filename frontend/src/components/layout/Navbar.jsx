@@ -31,6 +31,7 @@ import MailRoundedIcon from '@mui/icons-material/MailRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
 
 import BrandLogo from '../BrandLogo';
 import { useAuth } from '../../context/AuthContext';
@@ -40,6 +41,7 @@ import { useSettings } from '../../context/SettingsContext';
 const NAV_LINKS = [
   { label: 'Home', to: '/', icon: <HomeRoundedIcon /> },
   { label: 'Shop', to: '/shop', icon: <StorefrontRoundedIcon /> },
+  { label: 'Gallery', to: '/gallery', icon: <CollectionsRoundedIcon /> },
   { label: 'About', to: '/about', icon: <InfoRoundedIcon /> },
   { label: 'Contact', to: '/contact', icon: <MailRoundedIcon /> },
 ];

@@ -27,6 +27,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import WaterDropRoundedIcon from '@mui/icons-material/WaterDropRounded';
+import PermMediaRoundedIcon from '@mui/icons-material/PermMediaRounded';
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -37,6 +38,7 @@ const LINKS = [
   { to: '/admin/products', label: 'Products', icon: <Inventory2RoundedIcon /> },
   { to: '/admin/categories', label: 'Categories', icon: <CategoryRoundedIcon /> },
   { to: '/admin/orders', label: 'Orders', icon: <ReceiptLongRoundedIcon /> },
+  { to: '/admin/media', label: 'Media Gallery', icon: <PermMediaRoundedIcon /> },
   { to: '/admin/customers', label: 'Customers', icon: <GroupRoundedIcon /> },
   { to: '/admin/messages', label: 'Inquiries', icon: <MarkEmailUnreadRoundedIcon /> },
   { to: '/admin/settings', label: 'Store Settings', icon: <SettingsRoundedIcon /> },

@@ -80,6 +80,89 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product deleted.']);
     }
 
+    /**
+     * Lightweight inline edit — price / stock / flags only.
+     */
+    public function quickUpdate(Request $request, Product $product)
+    {
+        $data = $request->validate([
+            'price' => ['sometimes', 'numeric', 'min:0', 'max:99999999'],
+            'stock_quantity' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
+            'is_active' => ['sometimes', 'boolean'],
+            'is_featured' => ['sometimes', 'boolean'],
+        ]);
+
+        $product->update($data);
+
+        return response()->json(['product' => $product->fresh()->load(['category', 'images'])]);
+    }
+
+    /**
+     * Clone a product (as an inactive draft) including its images.
+     */
+    public function duplicate(Product $product)
+    {
+        $copy = $product->replicate(['views', 'slug']);
+        $copy->title = $product->title . ' (Copy)';
+        $copy->slug = $this->uniqueSlug($copy->title);
+        $copy->is_active = false;
+        $copy->views = 0;
+        $copy->save();
+
+        $dir = public_path('uploads/products');
+        foreach ($product->images as $image) {
+            $source = public_path(ltrim($image->path, '/'));
+            if (! is_file($source)) {
+                continue;
+            }
+            $filename = $copy->id . '-' . Str::random(10) . '.' . pathinfo($source, PATHINFO_EXTENSION);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            copy($source, $dir . '/' . $filename);
+
+            $copy->images()->create([
+                'path' => '/uploads/products/' . $filename,
+                'alt_text' => $image->alt_text,
+                'sort_order' => $image->sort_order,
+                'is_primary' => $image->is_primary,
+            ]);
+        }
+
+        return response()->json(['product' => $copy->fresh()->load(['category', 'images'])], 201);
+    }
+
+    /**
+     * Bulk operations on a set of products.
+     */
+    public function bulk(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['integer', 'exists:products,id'],
+            'action' => ['required', 'in:activate,deactivate,feature,unfeature,delete'],
+        ]);
+
+        $products = Product::whereIn('id', $data['ids'])->get();
+
+        foreach ($products as $product) {
+            match ($data['action']) {
+                'activate' => $product->update(['is_active' => true]),
+                'deactivate' => $product->update(['is_active' => false]),
+                'feature' => $product->update(['is_featured' => true]),
+                'unfeature' => $product->update(['is_featured' => false]),
+                'delete' => (function () use ($product) {
+                    foreach ($product->images as $image) {
+                        $this->deleteImageFile($image->path);
+                    }
+                    $product->delete();
+                })(),
+            };
+        }
+
+        return response()->json(['message' => 'Done', 'count' => $products->count()]);
+    }
+
     public function destroyImage(Product $product, ProductImage $image)
     {
         abort_unless($image->product_id === $product->id, 404);

@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout.jsx';
 import OrderSuccess from './pages/OrderSuccess.jsx';
 import Contact from './pages/Contact.jsx';
 import About from './pages/About.jsx';
+import Gallery from './pages/Gallery.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 import Login from './pages/auth/Login.jsx';
@@ -33,6 +34,7 @@ import AdminProductForm from './pages/admin/ProductForm.jsx';
 import AdminCategories from './pages/admin/Categories.jsx';
 import AdminOrders from './pages/admin/Orders.jsx';
 import AdminOrderDetail from './pages/admin/OrderDetail.jsx';
+import AdminMedia from './pages/admin/Media.jsx';
 import AdminCustomers from './pages/admin/Customers.jsx';
 import AdminMessages from './pages/admin/Messages.jsx';
 import AdminSettings from './pages/admin/Settings.jsx';
@@ -48,6 +50,7 @@ export default function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
 
@@ -109,6 +112,7 @@ export default function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="orders/:id" element={<AdminOrderDetail />} />
+          <Route path="media" element={<AdminMedia />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="messages" element={<AdminMessages />} />
           <Route path="settings" element={<AdminSettings />} />

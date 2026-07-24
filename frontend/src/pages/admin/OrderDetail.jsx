@@ -11,6 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import CircularProgress from '@mui/material/CircularProgress';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import PrintRoundedIcon from '@mui/icons-material/PrintRounded';
 
 import api, { apiError } from '../../api/client';
 import Seo from '../../components/Seo';
@@ -18,10 +19,13 @@ import LoadingScreen from '../../components/LoadingScreen';
 import { OrderStatusChip, PaymentStatusChip } from '../../components/StatusChip';
 import { formatETB, formatDate, ORDER_STATUS, PAYMENT_METHOD } from '../../utils/format';
 import { useSnackbar } from '../../context/SnackbarContext';
+import { useSettings } from '../../context/SettingsContext';
+import printInvoice from '../../utils/printInvoice';
 
 export default function OrderDetail() {
   const { id } = useParams();
   const { notify } = useSnackbar();
+  const { settings } = useSettings();
   const [order, setOrder] = useState(null);
   const [form, setForm] = useState({ status: '', payment_status: '', admin_notes: '' });
   const [saving, setSaving] = useState(false);
@@ -71,6 +75,14 @@ export default function OrderDetail() {
         <Typography variant="body2" color="text.secondary">
           Placed {formatDate(order.created_at, true)}
         </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<PrintRoundedIcon />}
+          onClick={() => printInvoice(order, settings)}
+          sx={{ ml: 'auto' }}
+        >
+          Print Invoice
+        </Button>
       </Box>
 
       <Grid container spacing={3}>

@@ -10,10 +10,10 @@
       content="Teddy General Trading — Ethiopia's trusted supplier of water pumps, filtration systems, pipes, valves, tanks and specialized water materials."
     />
     <title>Teddy General Trading | Water Materials &amp; Equipment</title>
-    <script type="module" crossorigin src="/assets/index-D8JBNA3O.js"></script>
+    <script type="module" crossorigin src="/assets/index-CiQ6G4Mi.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-DJli37Oc.js">
     <link rel="modulepreload" crossorigin href="/assets/charts-CfEsgGar.js">
-    <link rel="modulepreload" crossorigin href="/assets/mui-aQn2gVl5.js">
+    <link rel="modulepreload" crossorigin href="/assets/mui-XvWTYBm1.js">
     <link rel="stylesheet" crossorigin href="/assets/index-NfuFl0cV.css">
   </head>
   <body>
