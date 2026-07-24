@@ -1,0 +1,31 @@
+# ══════════════════════════════════════════════════════════════════
+#  Teddy General Trading — root .htaccess for cPanel deployment
+#
+#  Use this when the ENTIRE backend folder is uploaded INSIDE
+#  public_html (simplest cPanel setup). All traffic is routed into
+#  the Laravel public/ directory.
+#
+#  If you instead point the domain's document root at backend/public,
+#  this file is simply never used — no harm either way.
+# ══════════════════════════════════════════════════════════════════
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ── Force HTTPS (NFR-4.2.1) ─────────────────────────────────────
+    # Uncomment the 2 lines below AFTER your SSL certificate is active
+    # (cPanel usually issues AutoSSL within minutes of pointing DNS).
+    #RewriteCond %{HTTPS} off
+    #RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # ── Route everything into Laravel's public/ folder ──────────────
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# ── Defense in depth: never serve framework internals ───────────────
+<FilesMatch "^(\.env|\.env\..*|composer\.(json|lock)|artisan|package\.json)$">
+    Require all denied
+</FilesMatch>
+
+# Disable directory listings
+Options -Indexes
