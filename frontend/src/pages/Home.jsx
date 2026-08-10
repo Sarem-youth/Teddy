@@ -30,12 +30,15 @@ import ShowerRoundedIcon from '@mui/icons-material/ShowerRounded';
 import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded';
 import DonutLargeRoundedIcon from '@mui/icons-material/DonutLargeRounded';
 import SolarPowerRoundedIcon from '@mui/icons-material/SolarPowerRounded';
+import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
+import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 
 import api from '../api/client';
 import Seo from '../components/Seo';
 import ProductCard from '../components/ProductCard';
 import SectionHeading from '../components/SectionHeading';
 import { useSettings } from '../context/SettingsContext';
+import { publicAsset } from '../utils/publicAsset';
 
 const CATEGORY_ICONS = {
   pump: <SettingsSuggestRoundedIcon />,
@@ -65,12 +68,48 @@ const BENEFITS = [
   {
     icon: <SupportAgentRoundedIcon />,
     title: 'Expert Support',
-    text: 'Free sizing and technical advice from our water-systems specialists.',
+    text: 'Free sizing and technical advice from our water-systems supply and construction specialists.',
   },
   {
     icon: <PaymentsRoundedIcon />,
     title: 'Flexible Payment',
     text: 'Pay comfortably by bank transfer or cash on delivery.',
+  },
+];
+
+const SERVICE_LINES = [
+  {
+    icon: <WaterDropRoundedIcon />,
+    title: 'Water Material Supply',
+    text: 'Certified pumps, pipes, valves, filtration systems and fittings for residential, commercial and industrial projects.',
+  },
+  {
+    icon: <ConstructionRoundedIcon />,
+    title: 'Water Construction Works',
+    text: 'Installation and execution support for water lines, pumping stations, filtration units and site-level water infrastructure.',
+  },
+];
+
+const CERTIFICATE_PROOFS = [
+  {
+    file: 'photo_2026-08-10_15-02-35.jpg',
+    label: 'Business License — Supply & Construction',
+  },
+  {
+    file: 'photo_2026-08-10_15-02-46.jpg',
+    label: 'Trade Registration Document',
+  },
+  {
+    file: 'photo_2026-08-10_15-02-53.jpg',
+    label: 'Tax / Compliance Certificate',
+  },
+  {
+    file: 'photo_2026-08-10_15-02-59.jpg',
+    label: 'Construction Authorization Proof',
+  },
+  {
+    file: 'photo_2026-08-10_15-03-09.jpg',
+    label: 'Additional Registration Proof',
   },
 ];
 
@@ -107,7 +146,7 @@ export default function Home() {
     <Box>
       <Seo
         title="Water Materials & Equipment Store"
-        description="Shop water pumps, filtration systems, pipes, valves, tanks and irrigation equipment in Ethiopia. Certified products, expert support, fast delivery."
+        description="Water material supply and water construction services in Ethiopia. Certified products, licensed operation and expert project support."
       />
 
       {/* ============ HERO ============ */}
@@ -115,7 +154,7 @@ export default function Home() {
         sx={{
           position: 'relative',
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #041D33 0%, #063B66 45%, #0A5C9E 78%, #0E7FB8 100%)',
+          background: 'linear-gradient(135deg, #111827 0%, #1F2937 48%, #334155 100%)',
           color: '#fff',
         }}
       >
@@ -126,7 +165,7 @@ export default function Home() {
             width: 480,
             height: 480,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(34,211,238,.25), transparent 65%)',
+            background: 'radial-gradient(circle, rgba(148,163,184,.24), transparent 65%)',
             top: -160,
             right: -120,
             pointerEvents: 'none',
@@ -138,7 +177,7 @@ export default function Home() {
             width: 380,
             height: 380,
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(27,143,224,.3), transparent 65%)',
+            background: 'radial-gradient(circle, rgba(100,116,139,.28), transparent 65%)',
             bottom: -140,
             left: -100,
             pointerEvents: 'none',
@@ -167,7 +206,7 @@ export default function Home() {
                   component="span"
                   sx={{
                     display: 'block',
-                    background: 'linear-gradient(90deg,#4FC3F7,#22D3EE)',
+                    background: 'linear-gradient(90deg,#CBD5E1,#94A3B8)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
@@ -185,8 +224,8 @@ export default function Home() {
                 }}
               >
                 From high-performance pumps and filtration systems to pipes, valves and complete
-                irrigation kits — {settings.store_name || 'Teddy General Trading'} supplies certified
-                water materials for homes, farms and industry.
+                irrigation kits — {settings.store_name || 'Teddy General Trading'} provides certified
+                water material supply and water construction support for homes, farms and industry.
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4.5 }}>
                 <Button
@@ -199,10 +238,10 @@ export default function Home() {
                     px: 4,
                     py: 1.5,
                     fontSize: 16,
-                    bgcolor: '#22D3EE',
-                    color: '#062A45',
+                    bgcolor: '#E2E8F0',
+                    color: '#0F172A',
                     fontWeight: 700,
-                    '&:hover': { bgcolor: '#4FDFF5' },
+                    '&:hover': { bgcolor: '#CBD5E1' },
                   }}
                 >
                   Shop Products
@@ -233,7 +272,7 @@ export default function Home() {
                   ['7', 'Product Categories'],
                 ].map(([num, label]) => (
                   <Grid item xs={4} key={label}>
-                    <Typography sx={{ fontFamily: '"Sora",sans-serif', fontWeight: 800, fontSize: { xs: 22, md: 30 }, color: '#4FC3F7' }}>
+                    <Typography sx={{ fontFamily: '"Sora",sans-serif', fontWeight: 800, fontSize: { xs: 22, md: 30 }, color: '#CBD5E1' }}>
                       {num}
                     </Typography>
                     <Typography sx={{ fontSize: { xs: 11.5, md: 13 }, color: 'rgba(222,238,250,.7)' }}>
@@ -263,7 +302,7 @@ export default function Home() {
                   <WaterDropRoundedIcon sx={{ fontSize: 230, color: 'rgba(79,195,247,.28)' }} />
                   <Box
                     component="img"
-                    src="/uploads/products/seed/pump.svg"
+                    src="/uploads/hero_placeholder.png"
                     alt="Industrial water pump"
                     sx={{
                       position: 'absolute',
@@ -275,13 +314,13 @@ export default function Home() {
                 </Box>
                 {/* floating chips */}
                 <Chip
-                  icon={<VerifiedRoundedIcon sx={{ color: '#22D3EE !important' }} />}
+                  icon={<VerifiedRoundedIcon sx={{ color: '#BFDBFE !important' }} />}
                   label="Certified Equipment"
                   sx={{
                     position: 'absolute',
                     top: 18,
                     left: -14,
-                    bgcolor: '#0B3B63',
+                    bgcolor: '#1F2937',
                     color: '#fff',
                     px: 1,
                     py: 2.4,
@@ -291,13 +330,13 @@ export default function Home() {
                   }}
                 />
                 <Chip
-                  icon={<LocalShippingRoundedIcon sx={{ color: '#22D3EE !important' }} />}
+                  icon={<LocalShippingRoundedIcon sx={{ color: '#BFDBFE !important' }} />}
                   label="Nationwide Delivery"
                   sx={{
                     position: 'absolute',
                     bottom: 24,
                     right: -10,
-                    bgcolor: '#0B3B63',
+                    bgcolor: '#1F2937',
                     color: '#fff',
                     px: 1,
                     py: 2.4,
@@ -327,7 +366,7 @@ export default function Home() {
         <SectionHeading
           overline="Browse by Category"
           title="What are you looking for?"
-          subtitle="Seven specialized categories covering every water infrastructure need — from a single fitting to complete pumping stations."
+          subtitle="Seven specialized categories supporting complete water infrastructure supply and construction execution."
         />
         <Grid container spacing={2.5}>
           {(categories || Array.from({ length: 7 })).map((cat, idx) => (
@@ -347,7 +386,7 @@ export default function Home() {
                       gap: 1.4,
                       transition: 'all .25s',
                       '&:hover .cat-icon': {
-                        background: 'linear-gradient(135deg,#0A5C9E,#0891B2)',
+                        background: 'linear-gradient(135deg,#334155,#64748B)',
                         color: '#fff',
                         transform: 'scale(1.08)',
                       },
@@ -361,7 +400,7 @@ export default function Home() {
                         borderRadius: '22px',
                         display: 'grid',
                         placeItems: 'center',
-                        bgcolor: 'rgba(10,92,158,.09)',
+                        bgcolor: 'rgba(51,65,85,.1)',
                         color: 'primary.main',
                         transition: 'all .25s',
                         '& svg': { fontSize: 30 },
@@ -386,7 +425,7 @@ export default function Home() {
       </Container>
 
       {/* ============ FEATURED PRODUCTS ============ */}
-      <Box sx={{ bgcolor: '#EDF4FA', py: { xs: 6, md: 9 } }}>
+      <Box sx={{ bgcolor: '#F8FAFC', py: { xs: 6, md: 9 } }}>
         <Container maxWidth="xl">
           <SectionHeading
             overline="Hand-picked for you"
@@ -421,7 +460,7 @@ export default function Home() {
 
       {/* ============ SHOWROOM / MEDIA ============ */}
       {(media.video || media.photos.length > 0) && (
-        <Box sx={{ background: 'linear-gradient(180deg,#F4F9FD 0%,#EAF3FA 100%)', py: { xs: 6, md: 9 } }}>
+        <Box sx={{ background: 'linear-gradient(180deg,#FFFFFF 0%,#F8FAFC 100%)', py: { xs: 6, md: 9 } }}>
           <Container maxWidth="xl">
             <SectionHeading
               overline="Straight from our showroom"
@@ -439,7 +478,7 @@ export default function Home() {
                       boxShadow: '0 24px 54px -18px rgba(5,36,64,.35)',
                       height: '100%',
                       minHeight: { xs: 260, md: 420 },
-                      bgcolor: '#06304f',
+                      bgcolor: '#111827',
                     }}
                   >
                     <Box
@@ -557,9 +596,9 @@ export default function Home() {
                     borderRadius: '22px',
                     display: 'grid',
                     placeItems: 'center',
-                    background: 'linear-gradient(135deg,#0A5C9E,#0891B2)',
+                    background: 'linear-gradient(135deg,#334155,#475569)',
                     color: '#fff',
-                    boxShadow: '0 12px 24px -8px rgba(10,92,158,.5)',
+                    boxShadow: '0 10px 18px -10px rgba(15,23,42,.55)',
                     '& svg': { fontSize: 30 },
                   }}
                 >
@@ -577,6 +616,89 @@ export default function Home() {
         </Grid>
       </Container>
 
+      {/* ============ LICENSES + SERVICES ============ */}
+      <Box sx={{ background: 'linear-gradient(180deg,#FFFFFF 0%, #F8FAFC 100%)', py: { xs: 6, md: 9 } }}>
+        <Container maxWidth="xl">
+          <SectionHeading
+            overline="Licensed Operations"
+            title="Certified for both supply and construction"
+            subtitle="We operate in both water-material supply and water-construction works, with documented certification for each line of service."
+          />
+
+          <Grid container spacing={2.5} sx={{ mb: 4.5 }}>
+            {SERVICE_LINES.map((service) => (
+              <Grid item xs={12} md={6} key={service.title}>
+                <Card sx={{ p: { xs: 2.5, md: 3.2 }, height: '100%' }}>
+                  <Box sx={{ display: 'flex', gap: 1.8, alignItems: 'flex-start' }}>
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: '18px',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: '#fff',
+                        background: 'linear-gradient(135deg,#334155,#475569)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {service.icon}
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 0.7 }}>
+                        {service.title}
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: 14.5, lineHeight: 1.75 }}>
+                        {service.text}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Grid container spacing={2}>
+            {CERTIFICATE_PROOFS.map((proof) => {
+              const src = publicAsset(`uploads/certificates/${proof.file}`);
+              return (
+              <Grid item xs={12} sm={6} md={4} lg={2.4} key={proof.file}>
+                <Card sx={{ p: 1.2, height: '100%' }}>
+                  <Box
+                    component="a"
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ display: 'block', textDecoration: 'none' }}
+                  >
+                    <Box
+                      component="img"
+                      src={src}
+                      alt={proof.label}
+                      sx={{
+                        width: '100%',
+                        borderRadius: 2.5,
+                        objectFit: 'cover',
+                        aspectRatio: '4 / 5',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mt: 1.1 }}>
+                      <WorkspacePremiumRoundedIcon sx={{ fontSize: 17, color: 'success.main' }} />
+                      <Typography sx={{ fontSize: 12.8, fontWeight: 600, color: 'text.secondary', lineHeight: 1.35 }}>
+                        {proof.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
+      </Box>
+
       {/* ============ CTA ============ */}
       <Container maxWidth="xl" sx={{ pb: { xs: 7, md: 10 } }}>
         <Box
@@ -584,7 +706,7 @@ export default function Home() {
             borderRadius: 6,
             overflow: 'hidden',
             position: 'relative',
-            background: 'linear-gradient(120deg,#052440,#0A5C9E 60%,#0891B2)',
+            background: 'linear-gradient(120deg,#111827,#1F2937 60%,#334155)',
             color: '#fff',
             px: { xs: 3.5, md: 8 },
             py: { xs: 5, md: 7 },
@@ -596,7 +718,7 @@ export default function Home() {
               width: 320,
               height: 320,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(34,211,238,.3), transparent 65%)',
+              background: 'radial-gradient(circle, rgba(148,163,184,.3), transparent 65%)',
               top: -110,
               right: -60,
             }}
@@ -624,7 +746,7 @@ export default function Home() {
                   px: 5,
                   py: 1.6,
                   fontSize: 16,
-                  '&:hover': { bgcolor: '#E3F2FD' },
+                  '&:hover': { bgcolor: '#F1F5F9' },
                 }}
               >
                 Talk to an Expert

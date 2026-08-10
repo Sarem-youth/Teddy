@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useParams, Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
@@ -33,7 +33,8 @@ import { useCart } from '../context/CartContext';
 import { useSnackbar } from '../context/SnackbarContext';
 
 export default function ProductDetail() {
-  const { slug } = useParams();
+  const { identifier } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { notify } = useSnackbar();
@@ -46,20 +47,34 @@ export default function ProductDetail() {
   const [tab, setTab] = useState(0);
 
   useEffect(() => {
+    const raw = String(identifier || '').trim();
+    const routeProduct = location.state?.product;
+    const routeMatches =
+      routeProduct &&
+      (String(routeProduct.id) === raw || String(routeProduct.slug || '').toLowerCase() === raw.toLowerCase());
+
     setProduct(null);
     setNotFound(false);
     setQuantity(1);
     setActiveImage(0);
     setTab(0);
 
+    if (routeMatches) {
+      setProduct(routeProduct);
+    }
+
     api
-      .get(`/products/${slug}`)
+      .get(`/products/${encodeURIComponent(raw)}`)
       .then(({ data }) => {
         setProduct(data.product);
         setRelated(data.related || []);
       })
-      .catch(() => setNotFound(true));
-  }, [slug]);
+      .catch(() => {
+        if (!routeMatches) {
+          setNotFound(true);
+        }
+      });
+  }, [identifier, location.state]);
 
   if (notFound) {
     return (
@@ -79,10 +94,11 @@ export default function ProductDetail() {
 
   const images = product.images?.length
     ? product.images
-    : [{ id: 0, path: null, alt_text: product.title }];
+    : [{ id: 0, path: product.primary_image || null, alt_text: product.title }];
   const outOfStock = product.stock_quantity <= 0;
   const lowStock = !outOfStock && product.stock_quantity <= 5;
   const onSale =
+    product.price_visible &&
     product.compare_at_price && Number(product.compare_at_price) > Number(product.price);
 
   const handleAdd = async () => {
@@ -205,19 +221,35 @@ export default function ProductDetail() {
             </Typography>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.6, mt: 2.4 }}>
-            <Typography sx={{ fontFamily: '"Sora",sans-serif', fontWeight: 800, fontSize: { xs: 28, md: 36 }, color: 'primary.dark' }}>
-              {formatETB(product.price)}
-            </Typography>
-            {onSale && (
-              <Typography sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: 19 }}>
-                {formatETB(product.compare_at_price)}
+          {product.price_visible ? (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.6, mt: 2.4 }}>
+                <Typography sx={{ fontFamily: '"Sora",sans-serif', fontWeight: 800, fontSize: { xs: 28, md: 36 }, color: 'primary.dark' }}>
+                  {formatETB(product.price)}
+                </Typography>
+                {onSale && (
+                  <Typography sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: 19 }}>
+                    {formatETB(product.compare_at_price)}
+                  </Typography>
+                )}
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                VAT computed at checkout
               </Typography>
-            )}
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            VAT computed at checkout
-          </Typography>
+            </>
+          ) : (
+            <Card sx={{ mt: 2.4, p: 2.2, bgcolor: '#F4F9FD', border: '1px dashed #BBD5EA' }}>
+              <Typography sx={{ fontFamily: '"Sora",sans-serif', fontWeight: 700, color: 'primary.dark' }}>
+                Exact price is revealed during checkout intent
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.7 }}>
+                Select quantity, add your delivery city, and continue to review for a 20-minute live price lock.
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.6 }}>
+                Pricing tier: {product.price_band || 'Quoted'}
+              </Typography>
+            </Card>
+          )}
 
           {product.short_description && (
             <Typography sx={{ mt: 2.4, color: 'text.secondary', lineHeight: 1.8 }}>

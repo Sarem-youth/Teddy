@@ -18,7 +18,6 @@ import Divider from '@mui/material/Divider';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
 
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
@@ -32,19 +31,29 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import CollectionsRoundedIcon from '@mui/icons-material/CollectionsRounded';
+import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 
 import BrandLogo from '../BrandLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useSettings } from '../../context/SettingsContext';
+import { openAppUrl } from '../../utils/appNavigation';
 
 const NAV_LINKS = [
   { label: 'Home', to: '/', icon: <HomeRoundedIcon /> },
+  { label: 'My Account', to: '/account', icon: <PersonRoundedIcon />, authOnly: true, customerOnly: true },
+  { label: 'Construction', to: '/construction-services', icon: <ConstructionRoundedIcon /> },
   { label: 'Shop', to: '/shop', icon: <StorefrontRoundedIcon /> },
   { label: 'Gallery', to: '/gallery', icon: <CollectionsRoundedIcon /> },
   { label: 'About', to: '/about', icon: <InfoRoundedIcon /> },
   { label: 'Contact', to: '/contact', icon: <MailRoundedIcon /> },
 ];
+
+function canShowNavLink(link, user) {
+  if (link.authOnly && !user) return false;
+  if (link.customerOnly && (!user || user.is_admin)) return false;
+  return true;
+}
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -96,7 +105,7 @@ export default function Navbar() {
             </Box>
 
             <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, ml: 3 }}>
-              {NAV_LINKS.map((link) => (
+              {NAV_LINKS.filter((link) => canShowNavLink(link, user)).map((link) => (
                 <Button
                   key={link.to}
                   component={NavLink}
@@ -105,7 +114,7 @@ export default function Navbar() {
                   sx={{
                     color: 'text.secondary',
                     px: 1.8,
-                    '&.active': { color: 'primary.main', bgcolor: 'rgba(10,92,158,.08)' },
+                    '&.active': { color: 'primary.main', bgcolor: 'rgba(51,65,85,.08)' },
                   }}
                 >
                   {link.label}
@@ -119,13 +128,13 @@ export default function Navbar() {
               component="form"
               onSubmit={submitSearch}
               sx={{
-                display: { xs: 'none', sm: 'flex' },
+                display: { xs: 'none', lg: 'flex' },
                 alignItems: 'center',
-                bgcolor: '#F0F5FA',
+                bgcolor: '#F8FAFC',
                 borderRadius: 3,
                 px: 1.5,
                 py: 0.4,
-                width: { sm: 200, md: 260 },
+                width: 240,
                 border: '1px solid transparent',
                 transition: 'all .2s',
                 '&:focus-within': { borderColor: 'primary.light', bgcolor: '#fff' },
@@ -146,8 +155,8 @@ export default function Navbar() {
               to="/cart"
               aria-label="Shopping cart"
               sx={{
-                bgcolor: 'rgba(10,92,158,.08)',
-                '&:hover': { bgcolor: 'rgba(10,92,158,.16)' },
+                bgcolor: 'rgba(51,65,85,.08)',
+                '&:hover': { bgcolor: 'rgba(51,65,85,.14)' },
               }}
             >
               <Badge badgeContent={totals.count} color="secondary" max={99}>
@@ -164,7 +173,7 @@ export default function Navbar() {
                       height: 38,
                       fontSize: 15,
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg,#1B8FE0,#0891B2)',
+                      background: 'linear-gradient(135deg,#334155,#64748B)',
                     }}
                   >
                     {user.name?.charAt(0)?.toUpperCase()}
@@ -186,19 +195,23 @@ export default function Navbar() {
                   </Box>
                   <Divider />
                   {user.is_admin && (
-                    <MenuItem onClick={() => { setMenuAnchor(null); navigate('/admin'); }}>
+                    <MenuItem onClick={() => { setMenuAnchor(null); openAppUrl('/admin/dashboard', 'admin'); }}>
                       <ListItemIcon><SpaceDashboardRoundedIcon fontSize="small" /></ListItemIcon>
                       Admin Dashboard
                     </MenuItem>
                   )}
-                  <MenuItem onClick={() => { setMenuAnchor(null); navigate('/account'); }}>
-                    <ListItemIcon><PersonRoundedIcon fontSize="small" /></ListItemIcon>
-                    My Account
-                  </MenuItem>
-                  <MenuItem onClick={() => { setMenuAnchor(null); navigate('/account/orders'); }}>
-                    <ListItemIcon><ReceiptLongRoundedIcon fontSize="small" /></ListItemIcon>
-                    My Orders
-                  </MenuItem>
+                  {!user.is_admin && (
+                    <MenuItem onClick={() => { setMenuAnchor(null); navigate('/account'); }}>
+                      <ListItemIcon><PersonRoundedIcon fontSize="small" /></ListItemIcon>
+                      My Account
+                    </MenuItem>
+                  )}
+                  {!user.is_admin && (
+                    <MenuItem onClick={() => { setMenuAnchor(null); navigate('/account/orders'); }}>
+                      <ListItemIcon><ReceiptLongRoundedIcon fontSize="small" /></ListItemIcon>
+                      My Orders
+                    </MenuItem>
+                  )}
                   <Divider />
                   <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
                     <ListItemIcon><LogoutRoundedIcon fontSize="small" color="error" /></ListItemIcon>
@@ -207,11 +220,11 @@ export default function Navbar() {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
                 <Button
                   component={RouterLink}
                   to="/login"
-                  sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: 'text.secondary' }}
+                  sx={{ display: { xs: 'none', lg: 'inline-flex' }, color: 'text.secondary' }}
                 >
                   Sign In
                 </Button>
@@ -231,14 +244,14 @@ export default function Navbar() {
           </Box>
           <Divider />
           <List sx={{ px: 1 }}>
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS.filter((link) => canShowNavLink(link, user)).map((link) => (
               <ListItemButton
                 key={link.to}
                 component={NavLink}
                 to={link.to}
                 end={link.to === '/'}
                 onClick={() => setDrawerOpen(false)}
-                sx={{ borderRadius: 2.5, my: 0.3, '&.active': { bgcolor: 'rgba(10,92,158,.1)', color: 'primary.main' } }}
+                sx={{ borderRadius: 2.5, my: 0.3, '&.active': { bgcolor: 'rgba(51,65,85,.1)', color: 'primary.main' } }}
               >
                 <ListItemIcon sx={{ minWidth: 42 }}>{link.icon}</ListItemIcon>
                 <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: 600 }} />
@@ -247,20 +260,9 @@ export default function Navbar() {
             <Divider sx={{ my: 1 }} />
             {user ? (
               <>
-                <ListItemButton
-                  onClick={() => { setDrawerOpen(false); navigate('/account'); }}
-                  sx={{ borderRadius: 2.5, my: 0.3 }}
-                >
-                  <ListItemAvatar sx={{ minWidth: 42 }}>
-                    <Avatar sx={{ width: 30, height: 30, fontSize: 14 }}>
-                      {user.name?.charAt(0)?.toUpperCase()}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary="My Account" primaryTypographyProps={{ fontWeight: 600 }} />
-                </ListItemButton>
                 {user.is_admin && (
                   <ListItemButton
-                    onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
+                    onClick={() => { setDrawerOpen(false); openAppUrl('/admin/dashboard', 'admin'); }}
                     sx={{ borderRadius: 2.5, my: 0.3 }}
                   >
                     <ListItemIcon sx={{ minWidth: 42 }}><SpaceDashboardRoundedIcon /></ListItemIcon>

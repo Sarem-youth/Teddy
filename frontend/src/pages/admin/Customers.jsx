@@ -107,7 +107,7 @@ export default function Customers() {
                     <TableRow key={customer.id} hover>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.6 }}>
-                          <Avatar sx={{ width: 38, height: 38, fontSize: 15, fontWeight: 700, background: 'linear-gradient(135deg,#1B8FE0,#0891B2)' }}>
+                          <Avatar sx={{ width: 38, height: 38, fontSize: 15, fontWeight: 700, background: 'linear-gradient(135deg,#334155,#64748B)' }}>
                             {customer.name?.charAt(0)?.toUpperCase()}
                           </Avatar>
                           <Box>

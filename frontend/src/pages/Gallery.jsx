@@ -7,6 +7,7 @@ import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
+import Button from '@mui/material/Button';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
@@ -27,19 +28,63 @@ const FILTERS = [
 ];
 
 export default function Gallery() {
-  const [items, setItems] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
   const [filter, setFilter] = useState('all');
   const [lightbox, setLightbox] = useState(-1); // index into filtered list
 
   useEffect(() => {
+    setLoading(true);
+    setItems([]);
+    setPage(1);
+
     api
-      .get('/gallery')
-      .then(({ data }) => setItems(data.items || []))
-      .catch(() => setItems([]));
-  }, []);
+      .get('/gallery', {
+        params: {
+          page: 1,
+          per_page: 24,
+          type: filter === 'all' ? undefined : filter,
+        },
+      })
+      .then(({ data }) => {
+        setItems(data.items || []);
+        setHasMore(Boolean(data.meta?.has_more));
+      })
+      .catch(() => {
+        setItems([]);
+        setHasMore(false);
+      })
+      .finally(() => setLoading(false));
+  }, [filter]);
+
+  const loadMore = () => {
+    if (!hasMore || loadingMore) return;
+
+    const nextPage = page + 1;
+    setLoadingMore(true);
+
+    api
+      .get('/gallery', {
+        params: {
+          page: nextPage,
+          per_page: 24,
+          type: filter === 'all' ? undefined : filter,
+        },
+      })
+      .then(({ data }) => {
+        setItems((prev) => [...prev, ...(data.items || [])]);
+        setHasMore(Boolean(data.meta?.has_more));
+        setPage(nextPage);
+      })
+      .catch(() => setHasMore(false))
+      .finally(() => setLoadingMore(false));
+  };
 
   const filtered = useMemo(
-    () => (items || []).filter((i) => filter === 'all' || i.type === filter),
+    () => items.filter((i) => filter === 'all' || i.type === filter),
     [items, filter]
   );
 
@@ -81,7 +126,7 @@ export default function Gallery() {
               label={
                 f.value === 'all'
                   ? f.label
-                  : `${f.label} (${(items || []).filter((i) => i.type === f.value).length})`
+                  : `${f.label} (${items.filter((i) => i.type === f.value).length})`
               }
               onClick={() => setFilter(f.value)}
               color={filter === f.value ? 'primary' : 'default'}
@@ -91,7 +136,7 @@ export default function Gallery() {
           ))}
         </Stack>
 
-        {items === null ? (
+        {loading ? (
           <Box sx={{ columnCount: { xs: 2, sm: 3, md: 4 }, columnGap: '14px' }}>
             {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton
@@ -104,65 +149,75 @@ export default function Gallery() {
         ) : filtered.length === 0 ? (
           <EmptyState title="Nothing here yet" subtitle="Check back soon — new photos are added regularly." />
         ) : (
-          <Box sx={{ columnCount: { xs: 2, sm: 3, md: 4 }, columnGap: '14px' }}>
-            {filtered.map((item, idx) => (
-              <Box
-                key={item.id}
-                onClick={() => setLightbox(idx)}
-                sx={{
-                  breakInside: 'avoid',
-                  mb: 1.75,
-                  position: 'relative',
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 10px rgba(4,42,74,.08)',
-                  transition: 'transform .25s ease, box-shadow .25s ease',
-                  '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 26px rgba(4,42,74,.18)' },
-                  '&:hover img': { transform: 'scale(1.04)' },
-                }}
-              >
+          <>
+            <Box sx={{ columnCount: { xs: 2, sm: 3, md: 4 }, columnGap: '14px' }}>
+              {filtered.map((item, idx) => (
                 <Box
-                  component="img"
-                  src={item.thumb_path || item.path}
-                  alt={item.title || 'Teddy General Trading project photo'}
-                  loading="lazy"
-                  sx={{ width: '100%', display: 'block', transition: 'transform .4s ease' }}
-                />
-                {item.type === 'video' && (
+                  key={item.id}
+                  onClick={() => setLightbox(idx)}
+                  sx={{
+                    breakInside: 'avoid',
+                    mb: 1.75,
+                    position: 'relative',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 10px rgba(4,42,74,.08)',
+                    transition: 'transform .25s ease, box-shadow .25s ease',
+                    '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 26px rgba(4,42,74,.18)' },
+                    '&:hover img': { transform: 'scale(1.04)' },
+                  }}
+                >
                   <Box
-                    sx={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'grid',
-                      placeItems: 'center',
-                      background: 'linear-gradient(180deg, rgba(3,30,53,.05), rgba(3,30,53,.45))',
-                    }}
-                  >
-                    <PlayCircleFilledRoundedIcon sx={{ fontSize: 58, color: '#fff', opacity: 0.95 }} />
-                  </Box>
-                )}
-                {item.title && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      px: 1.2,
-                      py: 0.6,
-                      color: '#fff',
-                      fontWeight: 600,
-                      background: 'linear-gradient(0deg, rgba(3,30,53,.75), transparent)',
-                    }}
-                  >
-                    {item.title}
-                  </Typography>
-                )}
+                    component="img"
+                    src={item.thumb_path || item.path}
+                    alt={item.title || 'Teddy General Trading project photo'}
+                    loading="lazy"
+                    sx={{ width: '100%', display: 'block', transition: 'transform .4s ease' }}
+                  />
+                  {item.type === 'video' && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'grid',
+                        placeItems: 'center',
+                        background: 'linear-gradient(180deg, rgba(3,30,53,.05), rgba(3,30,53,.45))',
+                      }}
+                    >
+                      <PlayCircleFilledRoundedIcon sx={{ fontSize: 58, color: '#fff', opacity: 0.95 }} />
+                    </Box>
+                  )}
+                  {item.title && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        px: 1.2,
+                        py: 0.6,
+                        color: '#fff',
+                        fontWeight: 600,
+                        background: 'linear-gradient(0deg, rgba(3,30,53,.75), transparent)',
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+
+            {hasMore && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2.5 }}>
+                <Button variant="outlined" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? 'Loading…' : 'Load More'}
+                </Button>
               </Box>
-            ))}
-          </Box>
+            )}
+          </>
         )}
       </Container>
 

@@ -15,7 +15,15 @@ return new class extends Migration
             $table->string('subject');
             $table->text('message');
             $table->boolean('is_read')->default(false);
+            $table->string('status', 40)->default('new');
+            $table->string('priority', 20)->default('normal');
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('admin_notes')->nullable();
+            $table->timestamp('responded_at')->nullable();
             $table->timestamps();
+
+            $table->index(['status', 'is_read']);
+            $table->index('assigned_to');
         });
     }
 

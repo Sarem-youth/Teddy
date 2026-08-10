@@ -112,12 +112,24 @@ class CartController extends Controller
                     'id' => $item->product->id,
                     'title' => $item->product->title,
                     'slug' => $item->product->slug,
-                    'price' => $item->product->price,
+                    'price' => null,
+                    'price_visible' => false,
+                    'price_reveal_mode' => 'quote_required',
+                    'price_band' => $this->priceBand((float) $item->product->price),
                     'stock_quantity' => $item->product->stock_quantity,
                     'primary_image' => $item->product->primary_image,
                 ],
             ])
             ->values()
             ->all();
+    }
+
+    private function priceBand(float $price): string
+    {
+        return match (true) {
+            $price < 1000 => 'Budget',
+            $price < 5000 => 'Mid-range',
+            default => 'Premium',
+        };
     }
 }

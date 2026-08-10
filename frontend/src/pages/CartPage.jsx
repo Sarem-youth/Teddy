@@ -26,6 +26,7 @@ export default function CartPage() {
   const { items, totals, updateQuantity, removeItem } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const pricesLocked = items.some((item) => !item.product?.price_visible);
 
   if (items.length === 0) {
     return (
@@ -61,7 +62,7 @@ export default function CartPage() {
                 <Box sx={{ display: 'flex', gap: 2, p: { xs: 2, sm: 2.5 }, alignItems: 'center' }}>
                   <Box
                     component={RouterLink}
-                    to={`/product/${item.product?.slug}`}
+                    to={item.product?.slug || item.product?.id ? `/product/${item.product?.slug || item.product?.id}` : '/shop'}
                     sx={{
                       width: { xs: 72, sm: 96 },
                       height: { xs: 72, sm: 96 },
@@ -88,7 +89,7 @@ export default function CartPage() {
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
                       component={RouterLink}
-                      to={`/product/${item.product?.slug}`}
+                      to={item.product?.slug || item.product?.id ? `/product/${item.product?.slug || item.product?.id}` : '/shop'}
                       sx={{
                         fontWeight: 650,
                         color: 'text.primary',
@@ -101,7 +102,9 @@ export default function CartPage() {
                       {item.product?.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
-                      {formatETB(item.product?.price)} each
+                      {item.product?.price_visible
+                        ? `${formatETB(item.product?.price)} each`
+                        : `Price lock required (${item.product?.price_band || 'Quoted'} tier)`}
                     </Typography>
                     {item.product?.stock_quantity <= 5 && (
                       <Typography variant="caption" color="warning.main" fontWeight={700}>
@@ -124,7 +127,9 @@ export default function CartPage() {
                         onChange={(q) => updateQuantity(item, q)}
                       />
                       <Typography sx={{ fontWeight: 800, color: 'primary.dark' }}>
-                        {formatETB(Number(item.product?.price ?? 0) * item.quantity)}
+                        {item.product?.price_visible
+                          ? formatETB(Number(item.product?.price ?? 0) * item.quantity)
+                          : 'Live quote at checkout'}
                       </Typography>
                     </Box>
                   </Box>
@@ -151,22 +156,28 @@ export default function CartPage() {
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.4 }}>
               <Typography color="text.secondary">Subtotal</Typography>
-              <Typography fontWeight={700}>{formatETB(totals.subtotal)}</Typography>
+              <Typography fontWeight={700}>{pricesLocked ? 'Generated at checkout' : formatETB(totals.subtotal)}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.4 }}>
               <Typography color="text.secondary">VAT ({totals.taxRate}%)</Typography>
-              <Typography fontWeight={700}>{formatETB(totals.tax)}</Typography>
+              <Typography fontWeight={700}>{pricesLocked ? 'Generated at checkout' : formatETB(totals.tax)}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.4 }}>
               <Typography color="text.secondary">Shipping</Typography>
-              <Typography fontWeight={700} color={totals.shipping === 0 ? 'success.main' : 'inherit'}>
-                {totals.shipping === 0 ? 'FREE' : formatETB(totals.shipping)}
+              <Typography fontWeight={700} color={!pricesLocked && totals.shipping === 0 ? 'success.main' : 'inherit'}>
+                {pricesLocked ? 'Calculated with live quote' : totals.shipping === 0 ? 'FREE' : formatETB(totals.shipping)}
               </Typography>
             </Box>
 
-            {totals.freeThreshold > 0 && totals.subtotal < totals.freeThreshold && (
+            {!pricesLocked && totals.freeThreshold > 0 && totals.subtotal < totals.freeThreshold && (
               <Alert severity="info" sx={{ my: 1.5, borderRadius: 2.5, fontSize: 13 }}>
                 Add {formatETB(totals.freeThreshold - totals.subtotal)} more for free shipping!
+              </Alert>
+            )}
+
+            {pricesLocked && (
+              <Alert severity="info" sx={{ my: 1.5, borderRadius: 2.5, fontSize: 13 }}>
+                Exact prices are revealed after shipping details are provided in checkout.
               </Alert>
             )}
 
@@ -174,7 +185,7 @@ export default function CartPage() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
               <Typography variant="h6">Total</Typography>
               <Typography variant="h6" color="primary.dark" sx={{ fontFamily: '"Sora",sans-serif' }}>
-                {formatETB(totals.total)}
+                {pricesLocked ? 'Live quote in checkout' : formatETB(totals.total)}
               </Typography>
             </Box>
 

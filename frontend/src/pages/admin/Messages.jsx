@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
@@ -27,9 +28,24 @@ import { useSnackbar } from '../../context/SnackbarContext';
 
 export default function Messages() {
   const { notify } = useSnackbar();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = useState(null);
-  const [filter, setFilter] = useState('all');
-  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState(searchParams.get('filter') || 'all');
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1));
+
+  useEffect(() => {
+    setFilter(searchParams.get('filter') || 'all');
+    setPage(Number(searchParams.get('page') || 1));
+  }, [searchParams]);
+
+  const patchParams = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (!value || value === 'all') next.delete(key);
+      else next.set(key, value);
+    });
+    setSearchParams(next);
+  };
 
   const load = useCallback(() => {
     setResult(null);
@@ -79,8 +95,7 @@ export default function Messages() {
           value={filter}
           onChange={(_, v) => {
             if (v) {
-              setFilter(v);
-              setPage(1);
+              patchParams({ filter: v, page: '' });
             }
           }}
         >
@@ -119,7 +134,7 @@ export default function Messages() {
                 borderColor: message.is_read ? 'divider' : 'primary.light',
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
-                bgcolor: message.is_read ? '#fff' : 'rgba(10,92,158,.035)',
+                bgcolor: message.is_read ? '#fff' : 'rgba(51,65,85,.035)',
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
@@ -163,7 +178,7 @@ export default function Messages() {
           ))}
           {result.last_page > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Pagination count={result.last_page} page={page} onChange={(_, p) => setPage(p)} color="primary" shape="rounded" />
+              <Pagination count={result.last_page} page={page} onChange={(_, p) => patchParams({ page: String(p) })} color="primary" shape="rounded" />
             </Box>
           )}
         </>

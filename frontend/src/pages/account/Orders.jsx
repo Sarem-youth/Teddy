@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
@@ -11,25 +11,43 @@ import TableRow from '@mui/material/TableRow';
 import TableContainer from '@mui/material/TableContainer';
 import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 
 import api from '../../api/client';
 import Seo from '../../components/Seo';
 import EmptyState from '../../components/EmptyState';
 import { OrderStatusChip } from '../../components/StatusChip';
-import { formatETB, formatDate, PAYMENT_METHOD } from '../../utils/format';
+import { formatETB, formatDate, ORDER_STATUS, PAYMENT_METHOD } from '../../utils/format';
 
 export default function Orders() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = useState(null);
-  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1));
+
+  useEffect(() => {
+    setStatus(searchParams.get('status') || '');
+    setPage(Number(searchParams.get('page') || 1));
+  }, [searchParams]);
+
+  const patchParams = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (!value) next.delete(key);
+      else next.set(key, value);
+    });
+    setSearchParams(next);
+  };
 
   useEffect(() => {
     setResult(null);
     api
-      .get('/orders', { params: { page } })
+      .get('/orders', { params: { page, status: status || undefined } })
       .then(({ data }) => setResult(data))
       .catch(() => setResult({ data: [], last_page: 1 }));
-  }, [page]);
+  }, [page, status]);
 
   return (
     <Box>
@@ -37,6 +55,24 @@ export default function Orders() {
       <Typography variant="h4" sx={{ mb: 3, fontSize: { xs: 24, md: 30 } }}>
         My Orders
       </Typography>
+
+      <Card sx={{ p: 2, mb: 3 }}>
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label="Status"
+          value={status}
+          onChange={(e) => patchParams({ status: e.target.value, page: '' })}
+        >
+          <MenuItem value="">All Orders</MenuItem>
+          {Object.entries(ORDER_STATUS).map(([value, meta]) => (
+            <MenuItem key={value} value={value}>
+              {meta.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Card>
 
       {!result ? (
         <Skeleton variant="rounded" height={320} sx={{ borderRadius: 4 }} />
@@ -99,7 +135,7 @@ export default function Orders() {
               <Pagination
                 count={result.last_page}
                 page={page}
-                onChange={(_, p) => setPage(p)}
+                onChange={(_, p) => patchParams({ page: String(p) })}
                 color="primary"
                 shape="rounded"
               />

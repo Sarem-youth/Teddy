@@ -66,7 +66,7 @@ export default function Profile() {
 
       <Grid container spacing={3.5}>
         <Grid item xs={12} md={6}>
-          <Card component="form" onSubmit={saveProfile} sx={{ p: { xs: 2.5, md: 3.5 } }}>
+          <Card component="form" onSubmit={saveProfile} id="profile-info" sx={{ p: { xs: 2.5, md: 3.5 }, scrollMarginTop: 96 }}>
             <Typography variant="h6" sx={{ mb: 3 }}>
               Personal Information
             </Typography>
@@ -106,7 +106,7 @@ export default function Profile() {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Card component="form" onSubmit={savePassword} sx={{ p: { xs: 2.5, md: 3.5 } }}>
+          <Card component="form" onSubmit={savePassword} id="security" sx={{ p: { xs: 2.5, md: 3.5 }, scrollMarginTop: 96 }}>
             <Typography variant="h6" sx={{ mb: 3 }}>
               Change Password
             </Typography>

@@ -19,6 +19,7 @@ export default function ProductCard({ product }) {
 
   const outOfStock = product.stock_quantity <= 0;
   const onSale =
+    product.price_visible &&
     product.compare_at_price && Number(product.compare_at_price) > Number(product.price);
   const discount = onSale
     ? Math.round((1 - Number(product.price) / Number(product.compare_at_price)) * 100)
@@ -43,16 +44,17 @@ export default function ProductCard({ product }) {
         transition: 'transform .25s ease, box-shadow .25s ease',
         '&:hover': {
           transform: 'translateY(-6px)',
-          boxShadow: '0 18px 38px -12px rgba(9,45,76,.22)',
+          boxShadow: '0 16px 28px -14px rgba(15,23,42,.28)',
         },
       }}
     >
       <CardActionArea
         component={RouterLink}
-        to={`/product/${product.slug}`}
+        to={`/product/${product.slug || product.id}`}
+        state={{ product }}
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
-        <Box sx={{ position: 'relative', pt: '72%', bgcolor: '#EDF4FA', overflow: 'hidden' }}>
+        <Box sx={{ position: 'relative', pt: '72%', bgcolor: '#F1F5F9', overflow: 'hidden' }}>
           {product.primary_image ? (
             <Box
               component="img"
@@ -74,7 +76,7 @@ export default function ProductCard({ product }) {
                 inset: 0,
                 display: 'grid',
                 placeItems: 'center',
-                background: 'linear-gradient(135deg,#0A5C9E22,#0891B233)',
+                background: 'linear-gradient(135deg,#33415522,#64748B33)',
               }}
             >
               <WaterDropRoundedIcon sx={{ fontSize: 64, color: 'primary.light', opacity: 0.6 }} />
@@ -84,7 +86,7 @@ export default function ProductCard({ product }) {
           <Box sx={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 0.8 }}>
             {onSale && <Chip size="small" color="error" label={`-${discount}%`} />}
             {product.is_featured && (
-              <Chip size="small" label="Featured" sx={{ bgcolor: '#0891B2', color: '#fff' }} />
+              <Chip size="small" label="Featured" sx={{ bgcolor: '#475569', color: '#fff' }} />
             )}
           </Box>
           {outOfStock && (
@@ -119,16 +121,29 @@ export default function ProductCard({ product }) {
 
           <Box sx={{ mt: 'auto', pt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontWeight: 800, color: 'primary.dark', fontSize: 17 }}>
-                {formatETB(product.price, { decimals: 0 })}
-              </Typography>
-              {onSale && (
-                <Typography
-                  variant="caption"
-                  sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
-                >
-                  {formatETB(product.compare_at_price, { decimals: 0 })}
-                </Typography>
+              {product.price_visible ? (
+                <>
+                  <Typography sx={{ fontWeight: 800, color: 'primary.dark', fontSize: 17 }}>
+                    {formatETB(product.price, { decimals: 0 })}
+                  </Typography>
+                  {onSale && (
+                    <Typography
+                      variant="caption"
+                      sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
+                    >
+                      {formatETB(product.compare_at_price, { decimals: 0 })}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Typography sx={{ fontWeight: 800, color: 'primary.dark', fontSize: 15.5 }}>
+                    Price revealed at checkout
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {product.price_band || 'Quoted'} tier
+                  </Typography>
+                </>
               )}
             </Box>
             <Tooltip title={outOfStock ? 'Out of stock' : 'Add to cart'}>
@@ -139,7 +154,7 @@ export default function ProductCard({ product }) {
                   onClick={handleAdd}
                   aria-label={`Add ${product.title} to cart`}
                   sx={{
-                    bgcolor: 'rgba(10,92,158,.1)',
+                    bgcolor: 'rgba(51,65,85,.1)',
                     '&:hover': { bgcolor: 'primary.main', color: '#fff' },
                   }}
                 >

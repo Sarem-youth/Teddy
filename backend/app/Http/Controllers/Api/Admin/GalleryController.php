@@ -25,7 +25,7 @@ class GalleryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'images' => ['nullable', 'array', 'max:20'],
+            'images' => ['nullable', 'array', 'max:200'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:6144'],
             'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:61440'],
             'poster' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

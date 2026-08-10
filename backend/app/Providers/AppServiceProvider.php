@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,5 +45,6 @@ class AppServiceProvider extends ServiceProvider
                 . '/reset-password?token=' . $token
                 . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
         });
+        User::observe(UserObserver::class);
     }
 }

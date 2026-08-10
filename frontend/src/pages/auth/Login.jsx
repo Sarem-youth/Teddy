@@ -11,6 +11,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
 import Link from '@mui/material/Link';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
@@ -24,9 +26,11 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from || '/account';
+  const isAdminLogin = location.pathname.startsWith('/admin/login');
+  const redirectTo = location.state?.from || (isAdminLogin ? '/admin' : '/account');
 
   const [form, setForm] = useState({ email: '', password: '' });
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -36,26 +40,31 @@ export default function Login() {
     setSubmitting(true);
     setError('');
     try {
-      const user = await login(form.email, form.password);
+      const user = await login(form.email, form.password, {
+        remember: keepLoggedIn,
+        adminOnly: isAdminLogin,
+      });
       navigate(user.is_admin && redirectTo === '/account' ? '/admin' : redirectTo, { replace: true });
     } catch (err) {
-      setError(apiError(err, 'Invalid email or password.'));
+      setError(err.response ? apiError(err, 'Invalid email or password.') : err.message || 'Invalid email or password.');
       setSubmitting(false);
     }
   };
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 5, md: 9 } }}>
-      <Seo title="Sign In" />
+      <Seo title={isAdminLogin ? 'Admin Sign In' : 'Sign In'} />
       <Card sx={{ p: { xs: 3, md: 5 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
           <BrandLogo />
         </Box>
         <Typography variant="h4" align="center" sx={{ fontSize: { xs: 24, md: 30 } }}>
-          Welcome back
+          {isAdminLogin ? 'Admin portal sign in' : 'Welcome back'}
         </Typography>
         <Typography align="center" color="text.secondary" sx={{ mt: 1, mb: 4 }}>
-          Sign in to track orders and check out faster.
+          {isAdminLogin
+            ? 'Sign in with an administrator account to manage products, orders and settings.'
+            : 'Sign in to track orders and check out faster.'}
         </Typography>
 
         {error && (
@@ -93,7 +102,21 @@ export default function Login() {
             }}
             sx={{ mb: 1.5 }}
           />
-          <Box sx={{ textAlign: 'right', mb: 3 }}>
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: 'space-between',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1,
+            }}
+          >
+            <FormControlLabel
+              control={<Checkbox checked={keepLoggedIn} onChange={(e) => setKeepLoggedIn(e.target.checked)} />}
+              label="Keep me logged in"
+              sx={{ '& .MuiFormControlLabel-label': { fontSize: 14.5 } }}
+            />
             <Link component={RouterLink} to="/forgot-password" fontSize={14} fontWeight={600}>
               Forgot password?
             </Link>
@@ -112,10 +135,21 @@ export default function Login() {
         </Box>
 
         <Typography align="center" color="text.secondary" sx={{ mt: 3.5, fontSize: 14.5 }}>
-          Don't have an account?{' '}
-          <Link component={RouterLink} to="/register" fontWeight={700}>
-            Create one free
-          </Link>
+          {isAdminLogin ? (
+            <>
+              Looking for customer login?{' '}
+              <Link component={RouterLink} to="/login" fontWeight={700}>
+                Go to user sign in
+              </Link>
+            </>
+          ) : (
+            <>
+              Don't have an account?{' '}
+              <Link component={RouterLink} to="/register" fontWeight={700}>
+                Create one free
+              </Link>
+            </>
+          )}
         </Typography>
       </Card>
     </Container>

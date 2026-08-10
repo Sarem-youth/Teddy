@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryAuditLog;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -88,13 +90,82 @@ class ProductController extends Controller
         $data = $request->validate([
             'price' => ['sometimes', 'numeric', 'min:0', 'max:99999999'],
             'stock_quantity' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
+            'stock_alert_threshold' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
             'is_active' => ['sometimes', 'boolean'],
             'is_featured' => ['sometimes', 'boolean'],
         ]);
 
+        $previous = $product->stock_quantity;
         $product->update($data);
 
+        if (isset($data['stock_quantity']) && $product->stock_quantity !== $previous) {
+            $this->writeAuditLog($product, $data['stock_quantity'] - $previous, 'stock_adjustment', 'Manual stock adjustment via quick update', [
+                'source' => 'quick_update',
+            ]);
+        }
+
         return response()->json(['product' => $product->fresh()->load(['category', 'images'])]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $handle = fopen($path, 'r');
+        $header = fgetcsv($handle);
+
+        if ($header === false || count($header) === 0) {
+            return response()->json(['message' => 'CSV file is empty.'], 422);
+        }
+
+        $created = 0;
+        $updated = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) !== count($header)) {
+                continue;
+            }
+
+            $data = array_combine($header, $row);
+            if (! is_array($data) || empty($data['title'])) {
+                continue;
+            }
+
+            $payload = [
+                'title' => trim((string) $data['title']),
+                'sku' => trim((string) ($data['sku'] ?? '')) ?: null,
+                'category_id' => $request->input('category_id'),
+                'price' => (float) ($data['price'] ?? 0),
+                'stock_quantity' => (int) ($data['stock_quantity'] ?? 0),
+                'short_description' => $data['short_description'] ?? null,
+                'details' => $data['details'] ?? null,
+                'stock_alert_threshold' => (int) ($data['stock_alert_threshold'] ?? 5),
+                'variant_attributes' => $this->parseVariantAttributes($data['variant_attributes'] ?? ''),
+                'is_active' => true,
+            ];
+
+            $product = Product::firstOrNew(['sku' => $payload['sku'] ?: null]);
+            $product->fill($payload);
+            $product->slug = $product->slug ?: $this->uniqueSlug($product->title, $product->id ?? null);
+            $product->save();
+
+            if ($product->wasRecentlyCreated) {
+                $created++;
+            } else {
+                $updated++;
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'message' => 'Products imported successfully.',
+            'created' => $created,
+            'updated' => $updated,
+        ]);
     }
 
     /**
@@ -196,13 +267,60 @@ class ProductController extends Controller
             'sku' => ['nullable', 'string', 'max:80'],
             'short_description' => ['nullable', 'string', 'max:600'],
             'details' => ['nullable', 'string', 'max:65000'], // REQ-3.1.2 free-form technical details
+            'image_path' => ['nullable', 'string', 'max:500', 'starts_with:/photos/,/uploads/'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'stock_quantity' => ['required', 'integer', 'min:0', 'max:1000000'],
+            'stock_alert_threshold' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
+            'variant_attributes' => ['nullable', 'array'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
             'meta_title' => ['nullable', 'string', 'max:190'],
             'meta_description' => ['nullable', 'string', 'max:500'],
+        ]);
+    }
+
+    private function parseVariantAttributes(?string $raw): array
+    {
+        if ($raw === null || trim($raw) === '') {
+            return [];
+        }
+
+        $attributes = [];
+        foreach (explode(';', $raw) as $segment) {
+            $segment = trim($segment);
+            if ($segment === '') {
+                continue;
+            }
+
+            $parts = explode(':', $segment, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
+            if ($key !== '' && $value !== '') {
+                $attributes[$key] = $value;
+            }
+        }
+
+        return $attributes;
+    }
+
+    private function writeAuditLog(Product $product, int $delta, string $action, string $reason, array $metadata = []): void
+    {
+        $previousQuantity = $product->stock_quantity - $delta;
+        $newQuantity = $product->stock_quantity;
+
+        $product->inventoryAuditLogs()->create([
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'quantity_delta' => $delta,
+            'previous_quantity' => $previousQuantity,
+            'new_quantity' => $newQuantity,
+            'reason' => $reason,
+            'metadata' => $metadata,
         ]);
     }
 

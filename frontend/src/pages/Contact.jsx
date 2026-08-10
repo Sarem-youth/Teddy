@@ -75,7 +75,7 @@ export default function Contact() {
         description="Get in touch with Teddy General Trading for quotations, technical advice and product availability."
       />
 
-      <Box sx={{ background: 'linear-gradient(120deg,#052440,#0A5C9E)', color: '#fff', py: { xs: 4.5, md: 6 } }}>
+      <Box sx={{ background: 'linear-gradient(120deg,#111827,#334155)', color: '#fff', py: { xs: 4.5, md: 6 } }}>
         <Container maxWidth="xl">
           <Typography variant="h3" sx={{ fontSize: { xs: 26, md: 36 } }}>
             Contact Us
@@ -100,7 +100,7 @@ export default function Contact() {
                       borderRadius: '18px',
                       display: 'grid',
                       placeItems: 'center',
-                      background: 'linear-gradient(135deg,#0A5C9E,#0891B2)',
+                      background: 'linear-gradient(135deg,#334155,#64748B)',
                       color: '#fff',
                       flexShrink: 0,
                     }}

@@ -19,6 +19,10 @@ export function formatDate(value, withTime = false) {
 
 export const ORDER_STATUS = {
   pending_verification: { label: 'Pending Verification', color: 'warning' },
+  pending: { label: 'Pending', color: 'warning' },
+  confirmed: { label: 'Confirmed', color: 'info' },
+  packing: { label: 'Packing', color: 'info' },
+  dispatched: { label: 'Dispatched', color: 'secondary' },
   processing: { label: 'Processing', color: 'info' },
   shipped: { label: 'Shipped', color: 'secondary' },
   delivered: { label: 'Delivered', color: 'success' },

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Setting;
+use App\Models\ShippingAddress;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->seedAdmin();
         $this->seedSettings();
+        $this->seedShippingAddresses();
 
         $this->call([
             RealCatalogSeeder::class, // real products from company photos
@@ -37,11 +39,13 @@ class DatabaseSeeder extends Seeder
         $defaults = [
             'store_name' => 'Teddy General Trading',
             'store_tagline' => 'Ethiopia\'s trusted source for water materials & equipment',
+            'banner_announcement' => 'Free technical sizing support for pumps, valves, and filtration projects.',
             'store_email' => 'info@teddytrading.com',
-            'store_phone' => '+251 91 123 4567',
+            'store_phone' => '+251 93 598 0786',
             'store_phone_alt' => '+251 11 662 0000',
-            'store_address' => 'Merkato, Dubai Tera Building, 2nd Floor, Addis Ababa, Ethiopia',
+            'store_address' => 'Hawassa, Arab sefer (beside gebre kirstos building).',
             'currency' => 'ETB',
+            'theme_accent' => '#0A5C9E',
             'tax_rate' => '15',
             'shipping_fee' => '150',
             'free_shipping_threshold' => '20000',
@@ -58,5 +62,21 @@ class DatabaseSeeder extends Seeder
         foreach ($defaults as $key => $value) {
             Setting::firstOrCreate(['key' => $key], ['value' => $value]);
         }
+
     }
+    private function seedShippingAddresses(): void
+    {
+        // Generic placeholder address (admin can edit later)
+        ShippingAddress::updateOrCreate([
+            'name' => 'Teddy HQ',
+            'phone' => '+251 91 000 0000',
+            'address' => 'Merkato, Dubai Tera Building, 2nd Floor, Addis Ababa, Ethiopia',
+            'city' => 'Addis Ababa',
+            'region' => 'Central',
+        ], [
+            'email' => 'info@teddytrading.com',
+            'is_default' => true,
+        ]);
+    }
+
 }

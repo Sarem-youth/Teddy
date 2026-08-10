@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
@@ -42,14 +42,38 @@ import downloadCsv from '../../utils/downloadCsv';
 
 export default function Products() {
   const { notify } = useSnackbar();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [filters, setFilters] = useState({ search: '', category_id: '', status: '' });
-  const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState({
+    search: searchParams.get('search') || '',
+    category_id: searchParams.get('category_id') || '',
+    status: searchParams.get('status') || '',
+  });
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1));
   const [selected, setSelected] = useState([]);
   const [quickEdit, setQuickEdit] = useState(null); // { anchor, product, price, stock }
   const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    setFilters({
+      search: searchParams.get('search') || '',
+      category_id: searchParams.get('category_id') || '',
+      status: searchParams.get('status') || '',
+    });
+    setSearchInput(searchParams.get('search') || '');
+    setPage(Number(searchParams.get('page') || 1));
+  }, [searchParams]);
+
+  const patchParams = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (!value) next.delete(key);
+      else next.set(key, value);
+    });
+    setSearchParams(next);
+  };
 
   const load = useCallback(() => {
     setResult(null);
@@ -163,8 +187,7 @@ export default function Products() {
               component="form"
               onSubmit={(e) => {
                 e.preventDefault();
-                setPage(1);
-                setFilters((f) => ({ ...f, search: searchInput.trim() }));
+                patchParams({ search: searchInput.trim(), page: '' });
               }}
             >
               <TextField
@@ -191,8 +214,7 @@ export default function Products() {
               label="Category"
               value={filters.category_id}
               onChange={(e) => {
-                setPage(1);
-                setFilters((f) => ({ ...f, category_id: e.target.value }));
+                patchParams({ category_id: e.target.value, page: '' });
               }}
             >
               <MenuItem value="">All Categories</MenuItem>
@@ -211,8 +233,7 @@ export default function Products() {
               label="Status"
               value={filters.status}
               onChange={(e) => {
-                setPage(1);
-                setFilters((f) => ({ ...f, status: e.target.value }));
+                patchParams({ status: e.target.value, page: '' });
               }}
             >
               <MenuItem value="">All</MenuItem>
@@ -237,7 +258,7 @@ export default function Products() {
                 alignItems: 'center',
                 gap: 1,
                 flexWrap: 'wrap',
-                bgcolor: '#052440',
+                bgcolor: '#1F2937',
                 color: '#fff',
               }}
             >
@@ -336,7 +357,7 @@ export default function Products() {
                               gap: 0.5,
                               fontWeight: 700,
                               cursor: 'pointer',
-                              borderBottom: '1px dashed rgba(10,92,158,.5)',
+                              borderBottom: '1px dashed rgba(51,65,85,.45)',
                               '&:hover': { color: 'primary.main' },
                             }}
                           >
@@ -365,7 +386,12 @@ export default function Products() {
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title="View on storefront">
-                          <IconButton size="small" component={RouterLink} to={`/product/${product.slug}`} target="_blank">
+                          <IconButton
+                            size="small"
+                            component={RouterLink}
+                            to={product.slug || product.id ? `/product/${product.slug || product.id}` : '/shop'}
+                            target="_blank"
+                          >
                             <VisibilityRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -400,7 +426,7 @@ export default function Products() {
           </Card>
           {result.last_page > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Pagination count={result.last_page} page={page} onChange={(_, p) => setPage(p)} color="primary" shape="rounded" />
+              <Pagination count={result.last_page} page={page} onChange={(_, p) => patchParams({ page: String(p) })} color="primary" shape="rounded" />
             </Box>
           )}
         </>

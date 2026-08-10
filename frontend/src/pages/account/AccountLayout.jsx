@@ -18,6 +18,7 @@ import ManageAccountsRoundedIcon from '@mui/icons-material/ManageAccountsRounded
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 
 import { useAuth } from '../../context/AuthContext';
+import NavigationBackButton from '../../components/NavigationBackButton';
 
 const LINKS = [
   { to: '/account', label: 'Overview', icon: <SpaceDashboardRoundedIcon />, end: true },
@@ -31,13 +32,19 @@ export default function AccountLayout() {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Grid container spacing={4}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2.5, md: 4 }, overflowX: 'clip' }}>
+      <NavigationBackButton
+        hideOn={['/account']}
+        fallbackTo="/account"
+        sticky
+        sx={{ mb: 2, py: 0.9, justifyContent: 'flex-start' }}
+      />
+      <Grid container spacing={{ xs: 2.5, md: 4 }}>
         <Grid item xs={12} md={3.5} lg={3}>
           <Card sx={{ overflow: 'hidden' }}>
             <Box
               sx={{
-                background: 'linear-gradient(135deg,#052440,#0A5C9E)',
+                background: 'linear-gradient(135deg,#111827,#334155)',
                 p: 3,
                 display: 'flex',
                 alignItems: 'center',
@@ -50,7 +57,7 @@ export default function AccountLayout() {
                   height: 54,
                   fontSize: 22,
                   fontWeight: 700,
-                  background: 'linear-gradient(135deg,#1B8FE0,#22D3EE)',
+                  background: 'linear-gradient(135deg,#334155,#64748B)',
                 }}
               >
                 {user?.name?.charAt(0)?.toUpperCase()}
@@ -74,7 +81,7 @@ export default function AccountLayout() {
                   sx={{
                     borderRadius: 2.5,
                     mb: 0.4,
-                    '&.active': { bgcolor: 'rgba(10,92,158,.1)', color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
+                    '&.active': { bgcolor: 'rgba(51,65,85,.1)', color: 'primary.main', '& .MuiListItemIcon-root': { color: 'primary.main' } },
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 42 }}>{link.icon}</ListItemIcon>

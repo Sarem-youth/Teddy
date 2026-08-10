@@ -24,8 +24,6 @@ import EmptyState from '../components/EmptyState';
 const SORT_OPTIONS = [
   { value: 'latest', label: 'Newest First' },
   { value: 'popular', label: 'Most Popular' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
   { value: 'name', label: 'Name A–Z' },
 ];
 
@@ -87,13 +85,13 @@ export default function Shop() {
     <Box>
       <Seo
         title={activeCategory ? `${activeCategory.name} — Shop` : 'Shop All Products'}
-        description="Browse water pumps, filtration, pipes, valves, tanks and irrigation equipment with transparent ETB pricing."
+        description="Browse water pumps, filtration, pipes, valves, tanks and irrigation equipment. Exact pricing is revealed during checkout intent."
       />
 
       {/* page header */}
       <Box
         sx={{
-          background: 'linear-gradient(120deg,#052440,#0A5C9E)',
+          background: 'linear-gradient(120deg,#111827,#334155)',
           color: '#fff',
           py: { xs: 4.5, md: 6 },
         }}
@@ -104,7 +102,7 @@ export default function Shop() {
           </Typography>
           <Typography sx={{ mt: 1, color: 'rgba(222,238,250,.8)', maxWidth: 620 }}>
             {activeCategory?.description ||
-              'Complete catalog of certified water materials with transparent pricing in Ethiopian Birr.'}
+              'Complete catalog of certified water materials. Configure quantity and delivery in checkout to reveal live pricing.'}
           </Typography>
         </Container>
       </Box>

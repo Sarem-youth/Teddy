@@ -9,7 +9,7 @@ export default function RequireAdmin({ children }) {
   if (initializing) return <LoadingScreen />;
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/admin/login" state={{ from: `${location.pathname}${location.search}${location.hash}` }} replace />;
   }
 
   if (!user.is_admin) {

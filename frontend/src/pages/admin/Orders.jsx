@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
@@ -26,11 +26,28 @@ import { formatETB, formatDate, ORDER_STATUS, PAYMENT_METHOD } from '../../utils
 import downloadCsv from '../../utils/downloadCsv';
 
 export default function Orders() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [result, setResult] = useState(null);
-  const [status, setStatus] = useState('');
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1));
+
+  useEffect(() => {
+    setStatus(searchParams.get('status') || '');
+    setSearch(searchParams.get('search') || '');
+    setSearchInput(searchParams.get('search') || '');
+    setPage(Number(searchParams.get('page') || 1));
+  }, [searchParams]);
+
+  const patchParams = (patch) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (!value) next.delete(key);
+      else next.set(key, value);
+    });
+    setSearchParams(next);
+  };
 
   const load = useCallback(() => {
     setResult(null);
@@ -72,8 +89,7 @@ export default function Orders() {
               component="form"
               onSubmit={(e) => {
                 e.preventDefault();
-                setPage(1);
-                setSearch(searchInput.trim());
+                patchParams({ search: searchInput.trim(), page: '' });
               }}
             >
               <TextField
@@ -100,8 +116,7 @@ export default function Orders() {
               label="Status"
               value={status}
               onChange={(e) => {
-                setPage(1);
-                setStatus(e.target.value);
+                patchParams({ status: e.target.value, page: '' });
               }}
             >
               <MenuItem value="">All Statuses</MenuItem>
@@ -175,7 +190,7 @@ export default function Orders() {
           </Card>
           {result.last_page > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Pagination count={result.last_page} page={page} onChange={(_, p) => setPage(p)} color="primary" shape="rounded" />
+              <Pagination count={result.last_page} page={page} onChange={(_, p) => patchParams({ page: String(p) })} color="primary" shape="rounded" />
             </Box>
           )}
         </>

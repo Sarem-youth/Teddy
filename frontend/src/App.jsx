@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout.jsx';
 import OrderSuccess from './pages/OrderSuccess.jsx';
 import Contact from './pages/Contact.jsx';
 import About from './pages/About.jsx';
+import ConstructionServices from './pages/ConstructionServices.jsx';
 import Gallery from './pages/Gallery.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -38,6 +39,7 @@ import AdminMedia from './pages/admin/Media.jsx';
 import AdminCustomers from './pages/admin/Customers.jsx';
 import AdminMessages from './pages/admin/Messages.jsx';
 import AdminSettings from './pages/admin/Settings.jsx';
+import AdminConstruction from './pages/admin/Construction.jsx';
 
 export default function App() {
   return (
@@ -48,13 +50,15 @@ export default function App() {
         <Route element={<StorefrontLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:slug" element={<ProductDetail />} />
+          <Route path="/product/:identifier" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
+          <Route path="/construction-services" element={<ConstructionServices />} />
 
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -115,6 +119,7 @@ export default function App() {
           <Route path="media" element={<AdminMedia />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="messages" element={<AdminMessages />} />
+          <Route path="construction" element={<AdminConstruction />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>

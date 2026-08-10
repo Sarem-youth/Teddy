@@ -21,13 +21,13 @@ export default function Footer() {
   const { settings } = useSettings();
 
   return (
-    <Box component="footer" sx={{ mt: 'auto', bgcolor: '#062A45', color: '#B9CEDF' }}>
+    <Box component="footer" sx={{ mt: 'auto', bgcolor: '#111827', color: '#CBD5E1' }}>
       {/* wave divider */}
       <Box sx={{ lineHeight: 0, bgcolor: 'background.default' }}>
         <svg viewBox="0 0 1440 70" preserveAspectRatio="none" style={{ width: '100%', height: 54, display: 'block' }}>
           <path
             d="M0,32 C240,72 480,0 720,24 C960,48 1200,64 1440,28 L1440,70 L0,70 Z"
-            fill="#062A45"
+            fill="#111827"
           />
         </svg>
       </Box>
@@ -49,7 +49,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener"
                   aria-label="Facebook"
-                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#1B8FE0' } }}
+                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#334155' } }}
                 >
                   <FacebookRoundedIcon fontSize="small" />
                 </IconButton>
@@ -62,7 +62,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener"
                   aria-label="Telegram"
-                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#229ED9' } }}
+                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#475569' } }}
                 >
                   <TelegramIcon fontSize="small" />
                 </IconButton>
@@ -75,7 +75,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener"
                   aria-label="WhatsApp"
-                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#25D366' } }}
+                  sx={{ bgcolor: 'rgba(255,255,255,.08)', color: '#fff', '&:hover': { bgcolor: '#64748B' } }}
                 >
                   <WhatsAppIcon fontSize="small" />
                 </IconButton>
@@ -98,7 +98,7 @@ export default function Footer() {
                 key={l.label}
                 component={RouterLink}
                 to={l.to}
-                sx={{ display: 'block', color: '#B9CEDF', fontSize: 14, mb: 1.2, '&:hover': { color: '#fff' } }}
+                sx={{ display: 'block', color: '#CBD5E1', fontSize: 14, mb: 1.2, '&:hover': { color: '#fff' } }}
               >
                 {l.label}
               </Link>
@@ -121,7 +121,7 @@ export default function Footer() {
                 key={l.label}
                 component={RouterLink}
                 to={l.to}
-                sx={{ display: 'block', color: '#B9CEDF', fontSize: 14, mb: 1.2, '&:hover': { color: '#fff' } }}
+                sx={{ display: 'block', color: '#CBD5E1', fontSize: 14, mb: 1.2, '&:hover': { color: '#fff' } }}
               >
                 {l.label}
               </Link>
@@ -133,20 +133,20 @@ export default function Footer() {
               Get in Touch
             </Typography>
             <Box sx={{ display: 'flex', gap: 1.5, mb: 1.6, alignItems: 'flex-start' }}>
-              <PlaceRoundedIcon sx={{ fontSize: 20, mt: 0.3, color: '#22D3EE' }} />
+              <PlaceRoundedIcon sx={{ fontSize: 20, mt: 0.3, color: '#94A3B8' }} />
               <Typography sx={{ fontSize: 14, lineHeight: 1.7 }}>
                 {settings.store_address || 'Addis Ababa, Ethiopia'}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1.5, mb: 1.6, alignItems: 'center' }}>
-              <CallRoundedIcon sx={{ fontSize: 20, color: '#22D3EE' }} />
-              <Link href={`tel:${settings.store_phone || ''}`} sx={{ fontSize: 14, color: '#B9CEDF' }}>
+              <CallRoundedIcon sx={{ fontSize: 20, color: '#94A3B8' }} />
+              <Link href={`tel:${settings.store_phone || ''}`} sx={{ fontSize: 14, color: '#CBD5E1' }}>
                 {settings.store_phone || '+251 — — —'}
               </Link>
             </Box>
             <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-              <EmailRoundedIcon sx={{ fontSize: 20, color: '#22D3EE' }} />
-              <Link href={`mailto:${settings.store_email || ''}`} sx={{ fontSize: 14, color: '#B9CEDF' }}>
+              <EmailRoundedIcon sx={{ fontSize: 20, color: '#94A3B8' }} />
+              <Link href={`mailto:${settings.store_email || ''}`} sx={{ fontSize: 14, color: '#CBD5E1' }}>
                 {settings.store_email || 'info@teddytrading.com'}
               </Link>
             </Box>
@@ -167,7 +167,7 @@ export default function Footer() {
           <Typography sx={{ fontSize: 13 }}>
             © {new Date().getFullYear()} {settings.store_name || 'Teddy General Trading'}. All rights reserved.
           </Typography>
-          <Typography sx={{ fontSize: 13, color: 'rgba(185,206,223,.6)' }}>
+          <Typography sx={{ fontSize: 13, color: 'rgba(203,213,225,.62)' }}>
             Secure payments · Bank Transfer &amp; Cash on Delivery
           </Typography>
         </Box>

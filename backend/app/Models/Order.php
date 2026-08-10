@@ -8,8 +8,10 @@ class Order extends Model
 {
     public const STATUSES = [
         'pending_verification',
-        'processing',
-        'shipped',
+        'pending',
+        'confirmed',
+        'packing',
+        'dispatched',
         'delivered',
         'cancelled',
     ];
@@ -35,14 +37,20 @@ class Order extends Model
         'shipping_address',
         'shipping_city',
         'shipping_region',
+        'coupon_code',
+        'discount_amount',
         'notes',
         'admin_notes',
+        'shipping_tracking_number',
+        'shipping_carrier',
+        'fulfilled_at',
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'shipping_fee' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
 

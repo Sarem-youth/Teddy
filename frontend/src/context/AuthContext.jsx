@@ -1,33 +1,39 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import api, { TOKEN_KEY } from '../api/client';
+import api, { clearStoredToken, getStoredToken, setStoredToken } from '../api/client';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(Boolean(localStorage.getItem(TOKEN_KEY)));
+  const [initializing, setInitializing] = useState(Boolean(getStoredToken()));
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = getStoredToken();
     if (!token) return;
 
     api
       .get('/auth/me')
       .then(({ data }) => setUser(data.user))
-      .catch(() => localStorage.removeItem(TOKEN_KEY))
+      .catch(() => clearStoredToken())
       .finally(() => setInitializing(false));
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, options = {}) => {
+    const { remember = true, adminOnly = false } = options;
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem(TOKEN_KEY, data.token);
+    if (adminOnly && !data.user?.is_admin) {
+      clearStoredToken();
+      setUser(null);
+      throw new Error('This account is not authorized for admin access.');
+    }
+    setStoredToken(data.token, remember);
     setUser(data.user);
     return data.user;
   }, []);
 
   const register = useCallback(async (payload) => {
     const { data } = await api.post('/auth/register', payload);
-    localStorage.setItem(TOKEN_KEY, data.token);
+    setStoredToken(data.token, true);
     setUser(data.user);
     return data.user;
   }, []);
@@ -38,7 +44,7 @@ export function AuthProvider({ children }) {
     } catch {
       /* token already invalid */
     }
-    localStorage.removeItem(TOKEN_KEY);
+    clearStoredToken();
     setUser(null);
   }, []);
 

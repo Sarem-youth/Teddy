@@ -26,13 +26,13 @@ export default function printInvoice(order, settings = {}) {
 <title>Invoice ${escapeHtml(order.order_number)}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; color: #10283c; margin: 0; padding: 36px; }
-  .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0a5c9e; padding-bottom: 18px; }
-  .brand { font-size: 24px; font-weight: 800; color: #052440; }
-  .brand small { display: block; font-size: 12px; color: #0a5c9e; font-weight: 600; letter-spacing: 1.5px; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #111827; margin: 0; padding: 36px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #334155; padding-bottom: 18px; }
+  .brand { font-size: 24px; font-weight: 800; color: #111827; }
+  .brand small { display: block; font-size: 12px; color: #475569; font-weight: 600; letter-spacing: 1.5px; }
   .meta { text-align: right; font-size: 13px; line-height: 1.7; }
   .badge { display: inline-block; padding: 3px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; background: #e0f2fe; color: #075985; }
-  h2 { font-size: 15px; letter-spacing: 1px; text-transform: uppercase; color: #0a5c9e; margin: 26px 0 8px; }
+  h2 { font-size: 15px; letter-spacing: 1px; text-transform: uppercase; color: #334155; margin: 26px 0 8px; }
   .cols { display: flex; gap: 40px; }
   .cols div { font-size: 13.5px; line-height: 1.8; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -41,7 +41,7 @@ export default function printInvoice(order, settings = {}) {
   .num { text-align: right; white-space: nowrap; }
   .totals { margin-left: auto; margin-top: 14px; width: 300px; font-size: 14px; }
   .totals div { display: flex; justify-content: space-between; padding: 5px 10px; }
-  .totals .grand { border-top: 2px solid #0a5c9e; font-weight: 800; font-size: 16px; padding-top: 9px; color: #052440; }
+  .totals .grand { border-top: 2px solid #334155; font-weight: 800; font-size: 16px; padding-top: 9px; color: #111827; }
   .foot { margin-top: 44px; font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 14px; }
   @media print { body { padding: 12px 24px; } }
 </style>

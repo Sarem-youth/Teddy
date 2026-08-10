@@ -6,18 +6,23 @@ use App\Http\Controllers\Api\Admin\CustomerController as AdminCustomerController
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\ExportController as AdminExportController;
 use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
+use App\Http\Controllers\Api\Admin\InventoryAuditController;
 use App\Http\Controllers\Api\Admin\MessageController as AdminMessageController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PricingController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\ShippingAddressController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,7 +31,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{slug}', [ProductController::class, 'show']);
+Route::get('/products/{identifier}', [ProductController::class, 'show']);
+Route::post('/products/{identifier}/reviews', [ProductController::class, 'storeReview'])->middleware('auth:sanctum');
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/gallery', [GalleryController::class, 'index']);
 Route::get('/settings', [SettingController::class, 'publicSettings']);
@@ -70,11 +76,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
 
+    // Intent-based live pricing (exact prices only during checkout intent).
+    Route::post('/pricing/quote-intent', [PricingController::class, 'quoteIntent']);
+    Route::post('/pricing/quote-cart', [PricingController::class, 'quoteCart']);
+
     // Address book (REQ-3.3.2)
     Route::get('/addresses', [AddressController::class, 'index']);
     Route::post('/addresses', [AddressController::class, 'store']);
     Route::put('/addresses/{address}', [AddressController::class, 'update']);
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/upload', [AdminUploadController::class, 'index']);
+    Route::post('/upload', [AdminUploadController::class, 'store']);
+    Route::delete('/upload', [AdminUploadController::class, 'destroy']);
 });
 
 /*
@@ -87,8 +103,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
 
     Route::get('/products', [AdminProductController::class, 'index']);
     Route::post('/products', [AdminProductController::class, 'store']);
+    Route::post('/products/import', [AdminProductController::class, 'import']);
     Route::post('/products/bulk', [AdminProductController::class, 'bulk']);
     Route::get('/products/{product}', [AdminProductController::class, 'show']);
+    Route::put('/products/{product}', [AdminProductController::class, 'update']);
     Route::post('/products/{product}', [AdminProductController::class, 'update']); // POST for multipart updates
     Route::patch('/products/{product}/quick', [AdminProductController::class, 'quickUpdate']);
     Route::post('/products/{product}/duplicate', [AdminProductController::class, 'duplicate']);
@@ -105,15 +123,22 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
     Route::put('/orders/{order}', [AdminOrderController::class, 'update']);
 
+    Route::get('/inventory/audit', [InventoryAuditController::class, 'index']);
+
     Route::get('/customers', [AdminCustomerController::class, 'index']);
     Route::get('/customers/{customer}', [AdminCustomerController::class, 'show']);
 
     Route::get('/messages', [AdminMessageController::class, 'index']);
+    Route::put('/messages/{message}', [AdminMessageController::class, 'update']);
     Route::put('/messages/{message}/read', [AdminMessageController::class, 'markRead']);
     Route::delete('/messages/{message}', [AdminMessageController::class, 'destroy']);
 
     Route::get('/settings', [AdminSettingController::class, 'index']);
     Route::put('/settings', [AdminSettingController::class, 'update']);
+
+    Route::get('/upload', [AdminUploadController::class, 'index']);
+    Route::post('/upload', [AdminUploadController::class, 'store']);
+    Route::delete('/upload', [AdminUploadController::class, 'destroy']);
 
     // Media gallery manager
     Route::get('/gallery', [AdminGalleryController::class, 'index']);
@@ -121,7 +146,13 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     Route::put('/gallery/{item}', [AdminGalleryController::class, 'update']);
     Route::delete('/gallery/{item}', [AdminGalleryController::class, 'destroy']);
 
-    // CSV exports
+    // Shipping address management (admin only)
+    Route::get('/shipping-addresses', [ShippingAddressController::class, 'index']);
+    Route::post('/shipping-addresses', [ShippingAddressController::class, 'store']);
+    Route::put('/shipping-addresses/{address}', [ShippingAddressController::class, 'update']);
+    Route::delete('/shipping-addresses/{address}', [ShippingAddressController::class, 'destroy']);
+    Route::post('/shipping-addresses/{address}/set-default', [ShippingAddressController::class, 'setDefault']);
+
     Route::get('/export/orders', [AdminExportController::class, 'orders']);
     Route::get('/export/products', [AdminExportController::class, 'products']);
     Route::get('/export/customers', [AdminExportController::class, 'customers']);

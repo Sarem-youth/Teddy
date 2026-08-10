@@ -15,11 +15,13 @@ class Setting extends Model
     public const PUBLIC_KEYS = [
         'store_name',
         'store_tagline',
+        'banner_announcement',
         'store_email',
         'store_phone',
         'store_phone_alt',
         'store_address',
         'currency',
+        'theme_accent',
         'tax_rate',
         'shipping_fee',
         'free_shipping_threshold',

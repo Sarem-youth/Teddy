@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\PricingQuoteIntent;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -22,6 +24,7 @@ class OrderController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'items.*.quote_token' => ['required', 'string', 'max:120'],
             'payment_method' => ['required', 'in:cash_on_delivery,bank_transfer'],
             'shipping_name' => ['required', 'string', 'max:190'],
             'shipping_phone' => ['required', 'string', 'max:30'],
@@ -30,6 +33,7 @@ class OrderController extends Controller
             'shipping_city' => ['required', 'string', 'max:120'],
             'shipping_region' => ['nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'coupon_code' => ['nullable', 'string', 'max:80'],
         ]);
 
         $user = $request->user();
@@ -37,6 +41,17 @@ class OrderController extends Controller
         $order = DB::transaction(function () use ($data, $user) {
             $subtotal = 0;
             $lines = [];
+            $coupon = null;
+
+            if (! empty($data['coupon_code'])) {
+                $coupon = Coupon::query()->active()->whereRaw('LOWER(code) = ?', [strtolower(trim($data['coupon_code']))])->first();
+
+                if (! $coupon) {
+                    throw ValidationException::withMessages([
+                        'coupon_code' => ['This coupon code is invalid or no longer available.'],
+                    ]);
+                }
+            }
 
             foreach ($data['items'] as $row) {
                 $product = Product::where('id', $row['product_id'])->lockForUpdate()->first();
@@ -53,13 +68,30 @@ class OrderController extends Controller
                     ]);
                 }
 
-                $lineTotal = round($product->price * $row['quantity'], 2);
+                $quote = PricingQuoteIntent::query()
+                    ->where('token', (string) $row['quote_token'])
+                    ->where('user_id', $user->id)
+                    ->where('product_id', $product->id)
+                    ->where('quantity', (int) $row['quantity'])
+                    ->where('status', PricingQuoteIntent::STATUS_ISSUED)
+                    ->where('expires_at', '>', now())
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $quote) {
+                    throw ValidationException::withMessages([
+                        'items' => ["The live price lock for \"{$product->title}\" has expired or is invalid. Please review checkout and refresh prices."],
+                    ]);
+                }
+
+                $lineTotal = round((float) $quote->unit_price * $row['quantity'], 2);
                 $subtotal += $lineTotal;
 
                 $lines[] = [
                     'product' => $product,
+                    'quote' => $quote,
                     'quantity' => $row['quantity'],
-                    'unit_price' => $product->price,
+                    'unit_price' => $quote->unit_price,
                     'line_total' => $lineTotal,
                 ];
             }
@@ -68,6 +100,18 @@ class OrderController extends Controller
             $taxRate = (float) Setting::get('tax_rate', 0);
             $shippingFee = (float) Setting::get('shipping_fee', 0);
             $freeThreshold = (float) Setting::get('free_shipping_threshold', 0);
+
+            $discountAmount = 0.0;
+            if ($coupon) {
+                if (! $coupon->isUsableFor($subtotal)) {
+                    throw ValidationException::withMessages([
+                        'coupon_code' => ['This coupon does not apply to your current order.'],
+                    ]);
+                }
+
+                $discountAmount = round($coupon->calculateDiscount($subtotal), 2);
+                $subtotal = round(max($subtotal - $discountAmount, 0), 2);
+            }
 
             $tax = round($subtotal * $taxRate / 100, 2);
             if ($freeThreshold > 0 && $subtotal >= $freeThreshold) {
@@ -92,7 +136,13 @@ class OrderController extends Controller
                 'shipping_city' => $data['shipping_city'],
                 'shipping_region' => $data['shipping_region'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'discount_amount' => $discountAmount,
+                'coupon_code' => $coupon?->code,
             ]);
+
+            if ($coupon) {
+                $coupon->increment('used_count');
+            }
 
             foreach ($lines as $line) {
                 $order->items()->create([
@@ -101,6 +151,11 @@ class OrderController extends Controller
                     'unit_price' => $line['unit_price'],
                     'quantity' => $line['quantity'],
                     'line_total' => $line['line_total'],
+                ]);
+
+                $line['quote']->update([
+                    'status' => PricingQuoteIntent::STATUS_USED,
+                    'order_id' => $order->id,
                 ]);
 
                 $line['product']->decrement('stock_quantity', $line['quantity']);
@@ -123,11 +178,25 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $orders = $request->user()
+        $query = $request->user()
             ->orders()
             ->withCount('items')
-            ->latest()
-            ->paginate(10);
+            ->latest();
+
+        if ($request->filled('status')) {
+            $statuses = collect(explode(',', (string) $request->string('status')))
+                ->map(fn ($status) => trim($status))
+                ->filter()
+                ->values();
+
+            if ($statuses->count() === 1) {
+                $query->where('status', $statuses->first());
+            } elseif ($statuses->count() > 1) {
+                $query->whereIn('status', $statuses->all());
+            }
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
 
         return response()->json($orders);
     }

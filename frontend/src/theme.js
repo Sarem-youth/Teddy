@@ -1,28 +1,28 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
 export const brand = {
-  navy: '#062A45',
-  deep: '#063B66',
-  primary: '#0A5C9E',
-  bright: '#1B8FE0',
-  cyan: '#0891B2',
-  aqua: '#22D3EE',
-  mist: '#F2F7FB',
-  gradient: 'linear-gradient(135deg, #052440 0%, #0A5C9E 55%, #0E7FB8 100%)',
-  gradientSoft: 'linear-gradient(135deg, #0A5C9E 0%, #0891B2 100%)',
+  navy: '#1F2937',
+  deep: '#111827',
+  primary: '#334155',
+  bright: '#64748B',
+  cyan: '#475569',
+  aqua: '#94A3B8',
+  mist: '#F6F8FA',
+  gradient: 'linear-gradient(135deg, #111827 0%, #334155 55%, #475569 100%)',
+  gradientSoft: 'linear-gradient(135deg, #334155 0%, #475569 100%)',
 };
 
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: { main: brand.primary, dark: brand.deep, light: brand.bright, contrastText: '#fff' },
-    secondary: { main: brand.cyan, dark: '#066A82', light: brand.aqua, contrastText: '#fff' },
-    background: { default: '#F5F8FB', paper: '#FFFFFF' },
-    text: { primary: '#12283C', secondary: '#54708A' },
+    secondary: { main: brand.cyan, dark: '#334155', light: brand.aqua, contrastText: '#fff' },
+    background: { default: '#F8FAFC', paper: '#FFFFFF' },
+    text: { primary: '#1F2937', secondary: '#64748B' },
     success: { main: '#0E9F6E' },
     warning: { main: '#D97706' },
     error: { main: '#DC2626' },
-    divider: '#E3ECF3',
+    divider: '#E2E8F0',
   },
   shape: { borderRadius: 12 },
   typography: {
@@ -41,8 +41,8 @@ const theme = createTheme({
       styleOverrides: {
         root: { borderRadius: 10, paddingInline: 18 },
         containedPrimary: {
-          boxShadow: '0 8px 20px -6px rgba(10,92,158,.45)',
-          '&:hover': { boxShadow: '0 10px 24px -6px rgba(10,92,158,.55)' },
+          boxShadow: '0 4px 10px -4px rgba(15,23,42,.35)',
+          '&:hover': { boxShadow: '0 6px 14px -4px rgba(15,23,42,.4)' },
         },
       },
     },
@@ -50,8 +50,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
-          border: '1px solid #E7EFF6',
-          boxShadow: '0 2px 12px rgba(9,45,76,.05)',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 8px rgba(15,23,42,.04)',
         },
       },
     },
@@ -73,7 +73,7 @@ const theme = createTheme({
           '& .MuiTableCell-head': {
             fontWeight: 700,
             backgroundColor: brand.mist,
-            color: '#3A5A76',
+            color: '#475569',
             whiteSpace: 'nowrap',
           },
         },

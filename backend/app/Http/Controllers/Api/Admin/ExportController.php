@@ -41,7 +41,7 @@ class ExportController extends Controller
     public function products(): StreamedResponse
     {
         return $this->csv('products-' . now()->format('Y-m-d') . '.csv', [
-            'ID', 'Title', 'SKU', 'Category', 'Price (ETB)', 'Compare Price', 'Stock', 'Active', 'Featured', 'Views', 'Created',
+            'ID', 'Title', 'SKU', 'Category', 'Price (ETB)', 'Compare Price', 'Stock', 'Alert Threshold', 'Variant Attributes', 'Active', 'Featured', 'Views', 'Created',
         ], function ($out) {
             Product::with('category:id,name')->orderBy('id')->chunk(200, function ($products) use ($out) {
                 foreach ($products as $p) {
@@ -53,6 +53,8 @@ class ExportController extends Controller
                         $p->price,
                         $p->compare_at_price,
                         $p->stock_quantity,
+                        $p->stock_alert_threshold ?? 5,
+                        json_encode($p->variant_attributes ?? [], JSON_UNESCAPED_SLASHES),
                         $p->is_active ? 'yes' : 'no',
                         $p->is_featured ? 'yes' : 'no',
                         $p->views,

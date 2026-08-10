@@ -58,7 +58,7 @@ export default function AdminMedia() {
   const uploadImages = async (files) => {
     if (!files?.length) return;
     const form = new FormData();
-    [...files].slice(0, 20).forEach((f) => form.append('images[]', f));
+    [...files].forEach((f) => form.append('images[]', f));
     setUploading(true);
     try {
       await api.post('/admin/gallery', form);

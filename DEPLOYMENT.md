@@ -64,10 +64,18 @@ production PHP dependencies, and produces **`dist/teddy-platform.zip`**.
 2. **Copy** it to `.env` (File Manager » Copy)
 3. **Edit** `.env` and fill in the ★ values:
    - `APP_URL=https://yourdomain.com`
+   - If you split the public store and admin panel onto subdomains, also set:
+     - `SESSION_DOMAIN=.yourdomain.com`
+     - `SANCTUM_STATEFUL_DOMAINS=yourdomain.com,admin.yourdomain.com,localhost,localhost:5173,127.0.0.1,127.0.0.1:5173,127.0.0.1:8000,::1`
    - `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` from Step 1
    - `MAIL_*` — create a mailbox first under cPanel » **Email Accounts**
      (e.g. `no-reply@yourdomain.com`) and use the SMTP settings cPanel shows
      (host `mail.yourdomain.com`, port `465`, encryption `ssl`)
+
+4. In the frontend environment for the build, set these when using separate hosts:
+   - `VITE_PUBLIC_APP_URL=https://yourdomain.com`
+   - `VITE_ADMIN_APP_URL=https://admin.yourdomain.com`
+   - `VITE_API_BASE_URL=https://api.yourdomain.com` if the API is hosted separately; otherwise leave it unset
 
 ## Step 4 — Initialize the application
 

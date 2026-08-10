@@ -15,6 +15,8 @@ import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
@@ -33,6 +35,7 @@ const EMPTY = {
   sku: '',
   short_description: '',
   details: '',
+  image_path: '',
   price: '',
   compare_at_price: '',
   stock_quantity: 0,
@@ -53,12 +56,16 @@ export default function ProductForm() {
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
+  const [repoPhotos, setRepoPhotos] = useState([]);
+  const [imageMode, setImageMode] = useState('repo');
+  const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     api.get('/admin/categories').then(({ data }) => setCategories(data.categories || [])).catch(() => {});
+    api.get('/admin/upload', { params: { source: 'photos' } }).then(({ data }) => setRepoPhotos(data.files || [])).catch(() => setRepoPhotos([]));
   }, []);
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export default function ProductForm() {
           sku: p.sku || '',
           short_description: p.short_description || '',
           details: p.details || '',
+          image_path: p.image_path || '',
           price: p.price ?? '',
           compare_at_price: p.compare_at_price ?? '',
           stock_quantity: p.stock_quantity ?? 0,
@@ -96,6 +104,30 @@ export default function ProductForm() {
     const files = Array.from(e.target.files || []).slice(0, 8);
     setNewFiles((prev) => [...prev, ...files].slice(0, 8));
     e.target.value = '';
+  };
+
+  const uploadMainImage = async (file) => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setImageUploading(true);
+    try {
+      const { data } = await api.post('/admin/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const uploaded = data.file?.url || '';
+      if (uploaded) {
+        setForm((prev) => ({ ...prev, image_path: uploaded }));
+      }
+      notify('Main image uploaded');
+    } catch (err) {
+      notify(apiError(err), 'error');
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const submit = async (e) => {
@@ -227,6 +259,64 @@ export default function ProductForm() {
               Images
             </Typography>
 
+            <Typography variant="subtitle2" sx={{ mb: 1.2, color: 'text.secondary' }}>
+              Main storefront image source
+            </Typography>
+
+            <ToggleButtonGroup
+              value={imageMode}
+              exclusive
+              onChange={(_, value) => value && setImageMode(value)}
+              size="small"
+              sx={{ mb: 1.8 }}
+            >
+              <ToggleButton value="repo">Select from /photos</ToggleButton>
+              <ToggleButton value="upload">Upload new image</ToggleButton>
+            </ToggleButtonGroup>
+
+            {imageMode === 'repo' ? (
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Repository Photo"
+                value={form.image_path || ''}
+                onChange={setField('image_path')}
+                sx={{ mb: 1.6 }}
+              >
+                <MenuItem value="">No main image selected</MenuItem>
+                {repoPhotos.map((photo) => (
+                  <MenuItem key={photo.url} value={photo.url}>
+                    {photo.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : (
+              <Button variant="outlined" component="label" disabled={imageUploading} sx={{ mb: 1.6 }}>
+                {imageUploading ? 'Uploading…' : 'Upload and set as main image'}
+                <input
+                  hidden
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml"
+                  onChange={(e) => uploadMainImage(e.target.files?.[0])}
+                />
+              </Button>
+            )}
+
+            {form.image_path && (
+              <Box sx={{ mb: 2.2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.8 }}>
+                  Selected main image
+                </Typography>
+                <Box
+                  component="img"
+                  src={form.image_path}
+                  alt="Main product"
+                  sx={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 3, border: '2px solid', borderColor: 'primary.main' }}
+                />
+              </Box>
+            )}
+
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
               {existingImages.map((img) => (
                 <Box key={img.id} sx={{ position: 'relative', width: 110 }}>
@@ -307,7 +397,7 @@ export default function ProductForm() {
                   cursor: 'pointer',
                   color: 'text.secondary',
                   transition: 'all .2s',
-                  '&:hover': { borderColor: 'primary.main', color: 'primary.main', bgcolor: 'rgba(10,92,158,.04)' },
+                  '&:hover': { borderColor: 'primary.main', color: 'primary.main', bgcolor: 'rgba(51,65,85,.04)' },
                 }}
               >
                 <Box sx={{ textAlign: 'center' }}>

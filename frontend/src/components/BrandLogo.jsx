@@ -12,8 +12,8 @@ export default function BrandLogo({ light = false, compact = false }) {
           borderRadius: '14px',
           display: 'grid',
           placeItems: 'center',
-          background: 'linear-gradient(135deg, #1B8FE0, #0891B2)',
-          boxShadow: '0 6px 16px -4px rgba(11,94,158,.5)',
+          background: 'linear-gradient(135deg, #334155, #64748B)',
+          boxShadow: '0 6px 14px -6px rgba(15,23,42,.45)',
           color: '#fff',
         }}
       >

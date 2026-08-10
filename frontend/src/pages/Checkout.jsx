@@ -44,8 +44,12 @@ export default function Checkout() {
 
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(false);
   const [error, setError] = useState('');
   const [addresses, setAddresses] = useState([]);
+  const [quoteLines, setQuoteLines] = useState({});
+  const [quoteSummary, setQuoteSummary] = useState(null);
+  const [quoteExpiry, setQuoteExpiry] = useState(null);
   const [form, setForm] = useState({
     shipping_name: user?.name || '',
     shipping_phone: user?.phone || '',
@@ -57,6 +61,7 @@ export default function Checkout() {
     payment_method: 'cash_on_delivery',
   });
   const [fieldErrors, setFieldErrors] = useState({});
+  const hasLockedPrices = items.some((item) => !item.product?.price_visible);
 
   useEffect(() => {
     api
@@ -101,8 +106,57 @@ export default function Checkout() {
     return Object.keys(errors).length === 0;
   };
 
-  const next = () => {
+  const prepareLivePricing = async () => {
+    const { data } = await api.post('/pricing/quote-cart', {
+      shipping_city: form.shipping_city,
+      shipping_region: form.shipping_region || null,
+      items: items.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+      })),
+    });
+
+    const quotes = data.quotes || [];
+    const lines = quotes.reduce((acc, quote) => {
+      acc[quote.product_id] = quote;
+      return acc;
+    }, {});
+
+    const subtotal = quotes.reduce((sum, quote) => sum + Number(quote.line_total || 0), 0);
+    const taxRate = Number(settings.tax_rate ?? 0);
+    const tax = Math.round(subtotal * taxRate) / 100;
+    const freeThreshold = Number(settings.free_shipping_threshold ?? 0);
+    let shipping = items.length ? Number(settings.shipping_fee ?? 0) : 0;
+    if (freeThreshold > 0 && subtotal >= freeThreshold) shipping = 0;
+
+    setQuoteLines(lines);
+    setQuoteSummary({
+      subtotal,
+      tax,
+      taxRate,
+      shipping,
+      freeThreshold,
+      total: subtotal + tax + shipping,
+    });
+    setQuoteExpiry(data.expires_at || null);
+  };
+
+  const next = async () => {
     if (step === 0 && !validateShipping()) return;
+
+    if (step === 1) {
+      setError('');
+      setQuoteLoading(true);
+      try {
+        await prepareLivePricing();
+      } catch (err) {
+        setError(apiError(err, 'Could not generate live pricing. Please verify shipping details and try again.'));
+        setQuoteLoading(false);
+        return;
+      }
+      setQuoteLoading(false);
+    }
+
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
@@ -110,9 +164,21 @@ export default function Checkout() {
     setSubmitting(true);
     setError('');
     try {
+      const orderItems = items.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        quote_token: quoteLines[item.product_id]?.token,
+      }));
+
+      if (orderItems.some((item) => !item.quote_token)) {
+        setSubmitting(false);
+        setError('Live pricing has not been generated for all items. Please go back and continue again.');
+        return;
+      }
+
       const { data } = await api.post('/orders', {
         ...form,
-        items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+        items: orderItems,
       });
       await clearCart({ remote: false });
       notify('Order placed successfully!');
@@ -364,6 +430,12 @@ export default function Checkout() {
                 Review Your Order
               </Typography>
 
+              {quoteExpiry && (
+                <Alert severity="info" sx={{ mb: 2.2, borderRadius: 2.5 }}>
+                  Live prices are locked until {new Date(quoteExpiry).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
+                </Alert>
+              )}
+
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="overline" color="text.secondary">
@@ -410,7 +482,7 @@ export default function Checkout() {
                     </Typography>
                   </Typography>
                   <Typography variant="body2" fontWeight={700}>
-                    {formatETB(Number(item.product?.price ?? 0) * item.quantity)}
+                    {formatETB(Number(quoteLines[item.product_id]?.line_total ?? 0))}
                   </Typography>
                 </Box>
               ))}
@@ -419,21 +491,21 @@ export default function Checkout() {
 
           <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
             {step > 0 && (
-              <Button size="large" onClick={() => setStep((s) => s - 1)} disabled={submitting}>
+              <Button size="large" onClick={() => setStep((s) => s - 1)} disabled={submitting || quoteLoading}>
                 Back
               </Button>
             )}
             <Box sx={{ flex: 1 }} />
             {step < STEPS.length - 1 ? (
-              <Button size="large" variant="contained" onClick={next} sx={{ px: 5 }}>
-                Continue
+              <Button size="large" variant="contained" onClick={next} sx={{ px: 5 }} disabled={quoteLoading}>
+                {quoteLoading ? 'Generating Live Price…' : 'Continue'}
               </Button>
             ) : (
               <Button
                 size="large"
                 variant="contained"
                 onClick={placeOrder}
-                disabled={submitting}
+                disabled={submitting || quoteLoading}
                 startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : null}
                 sx={{ px: 5 }}
               >
@@ -449,29 +521,59 @@ export default function Checkout() {
             <Typography variant="h6" sx={{ mb: 2.4 }}>
               Summary
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
-              <Typography color="text.secondary">
-                Items ({totals.count})
-              </Typography>
-              <Typography fontWeight={700}>{formatETB(totals.subtotal)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
-              <Typography color="text.secondary">VAT ({totals.taxRate}%)</Typography>
-              <Typography fontWeight={700}>{formatETB(totals.tax)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
-              <Typography color="text.secondary">Shipping</Typography>
-              <Typography fontWeight={700} color={totals.shipping === 0 ? 'success.main' : 'inherit'}>
-                {totals.shipping === 0 ? 'FREE' : formatETB(totals.shipping)}
-              </Typography>
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography variant="h6">Total</Typography>
-              <Typography variant="h6" color="primary.dark" sx={{ fontFamily: '"Sora",sans-serif' }}>
-                {formatETB(totals.total)}
-              </Typography>
-            </Box>
+            {hasLockedPrices && !quoteSummary && (
+              <Alert severity="info" sx={{ mb: 2, borderRadius: 2.5 }}>
+                Exact pricing is revealed in the Review step after shipping details are confirmed.
+              </Alert>
+            )}
+
+            {quoteSummary && (
+              <Alert severity="success" sx={{ mb: 2, borderRadius: 2.5 }}>
+                Live pricing is active for this checkout session.
+              </Alert>
+            )}
+
+            {(() => {
+              const activeSummary = quoteSummary || totals;
+              const showValues = quoteSummary || !hasLockedPrices;
+
+              return (
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
+                    <Typography color="text.secondary">Items ({totals.count})</Typography>
+                    <Typography fontWeight={700}>{showValues ? formatETB(activeSummary.subtotal) : 'Generated in review'}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
+                    <Typography color="text.secondary">VAT ({activeSummary.taxRate}%)</Typography>
+                    <Typography fontWeight={700}>{showValues ? formatETB(activeSummary.tax) : 'Generated in review'}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.2 }}>
+                    <Typography color="text.secondary">Shipping</Typography>
+                    <Typography fontWeight={700} color={showValues && activeSummary.shipping === 0 ? 'success.main' : 'inherit'}>
+                      {showValues
+                        ? activeSummary.shipping === 0
+                          ? 'FREE'
+                          : formatETB(activeSummary.shipping)
+                        : 'Generated in review'}
+                    </Typography>
+                  </Box>
+
+                  {showValues && activeSummary.freeThreshold > 0 && activeSummary.subtotal < activeSummary.freeThreshold && (
+                    <Alert severity="info" sx={{ my: 1.5, borderRadius: 2.5, fontSize: 13 }}>
+                      Add {formatETB(activeSummary.freeThreshold - activeSummary.subtotal)} more for free shipping!
+                    </Alert>
+                  )}
+
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="h6">Total</Typography>
+                    <Typography variant="h6" color="primary.dark" sx={{ fontFamily: '"Sora",sans-serif' }}>
+                      {showValues ? formatETB(activeSummary.total) : 'Live quote in review'}
+                    </Typography>
+                  </Box>
+                </>
+              );
+            })()}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
               By placing this order you agree to our offline payment verification process
               (REQ-3.4.1). Orders are confirmed by our team via phone.
